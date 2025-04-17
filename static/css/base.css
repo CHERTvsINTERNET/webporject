@@ -1,0 +1,78 @@
+.sidenav {
+	height: 100%;
+	width: 160px;
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	background-color: #ffe;
+	overflow-x: hidden;
+	padding-top: 20px;
+}
+
+.sidenav a {
+	padding: 6px 8px 6px 16px;
+	color: #333;
+	text-decoration: none;
+	display: block;
+}
+
+.sidenav a:hover {
+	background-color: #fff;
+	color: #333;
+}
+
+.main-dashboard {
+	margin-left: 160px;
+	padding: 0px 10px;
+}
+
+.list-projects {
+	margin-top: 2em;
+	/* border-collapse: collapse; */
+}
+
+table,
+td,
+th {
+	border: 2px solid;
+}
+
+/* .login-center { */
+/* 	max-width: 300px; */
+/* 	max-height: 300px; */
+/* } */
+html,
+body {
+	background-color: #eee;
+	height: 100%;
+	overflow: hidden;
+}
+
+.login-center {
+	min-height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.login-center form {
+	background-color: #fff;
+	padding: 20px;
+	box-shadow: 0 0 2px;
+	border-radius: 15px;
+	min-width: 400px;
+}
+
+main {
+	padding: 20px;
+	height: 100%;
+}
+
+main h1 {
+	margin-bottom: 30px;
+}
+
+main h2 {
+	margin-top: 30px;
+}
