@@ -1,11 +1,10 @@
 import sqlalchemy
-
 from sqlalchemy_serializer import SerializerMixin
 
 from .db_session import SqlAlchemyBase
 
 
-class Themes(SqlAlchemyBase, SerializerMixin):
+class Theme(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'themes'
 
     id = sqlalchemy.Column(

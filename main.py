@@ -4,6 +4,7 @@ from flask import Flask, abort, redirect, render_template, send_file
 from flask_login import LoginManager, current_user, login_user, logout_user
 
 from data import db_session
+from data.quizzes import Quiz
 from data.user import User
 from forms.user import UserLoginForm, UserRegisterForm
 
@@ -18,6 +19,9 @@ def main():
     if not "db" in os.listdir(".") or not os.path.isdir("db"):
         os.makedirs("db")
     db_session.global_init("./db/blob.db")
+    db_sess = db_session.create_session()
+    q = db_sess.query(Quizzes).get(1)
+    print(q.author.name)
 
 
 @app.route("/login", methods=["GET", "POST"])

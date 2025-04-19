@@ -1,10 +1,13 @@
 from datetime import datetime
+
 import sqlalchemy as sa
+from sqlalchemy import orm
 from sqlalchemy_serializer import SerializerMixin
+
 from .db_session import SqlAlchemyBase
 
 
-class Quizzes(SqlAlchemyBase, SerializerMixin):
+class Quiz(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'quizzes'
 
     id = sa.Column(
@@ -12,10 +15,14 @@ class Quizzes(SqlAlchemyBase, SerializerMixin):
     )
     name = sa.Column(sa.String, nullable=False, unique=True)
     description = sa.Column(sa.String)
-    author = sa.Column(sa.Integer, sa.ForeignKey("users.id"))
+    author_id = sa.Column(sa.Integer, sa.ForeignKey("users.id"))
     created_date = sa.Column(
         sa.DateTime,
         default=datetime.now
     )
     rating = sa.Column(sa.Float)
     reward = sa.Column(sa.Integer)  # Зачем??
+
+    is_available = sa.Column(sa.Boolean)
+
+    author = orm.relationship("User", foreign_keys=[author_id])
