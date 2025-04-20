@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<nav class="sidenav">
+	<a href="/quizzes/redact/{{ quiz.id }}/settings">Общие настройки</a>
+	{% for q in questions %}
+	<a href="/quizzes/redact/{{ quiz.id }}/questions/{{ q.id }}">{{ q.question }}</a>
+	{% endfor %}
+	<a href="/quizzes/redact/{{ quiz.id }}/questions/add">Добавить вопрос</a>
+	<a href="/">Домашняя страница</a>
+</nav>
+<div class="main-dashboard">
+	{% block settings %}
+	<h1>Общие настройки</h1>
+	<div>
+		<form action="" , method="post">
+			{{ form.hidden_tag() }}
+			<br>
+			<p>
+				{{ form.quiz_name.label }}<br>
+				{{ form.quiz_name(class="form-control", type="text") }} <br>
+				{% for error in form.quiz_name.errors %}
+			<p class="alert alert-danger" role="alert">
+				{{ error }}
+			</p>
+			{% endfor %}
+			</p>
+			<p>
+				{{ form.quiz_description.label }}<br>
+				{{ form.quiz_description(class="form-control", type="text") }} <br>
+				{% for error in form.quiz_description.errors %}
+			<p class="alert alert-danger" role="alert">
+				{{ error }}
+			</p>
+			{% endfor %}
+			</p>
+			<p>{{message}}</p>
+			<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+		</form>
+	</div>
+	{% endblock %}
+</div>
+{% endblock %}

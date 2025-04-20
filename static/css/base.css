@@ -1,29 +1,33 @@
 .sidenav {
 	height: 100%;
-	width: 160px;
+	width: 200px;
 	position: fixed;
 	z-index: 1;
 	top: 0;
 	left: 0;
-	background-color: #ffe;
+	background-color: #88f;
+	border-right: 9px #44a solid;
 	overflow-x: hidden;
 	padding-top: 20px;
 }
 
 .sidenav a {
 	padding: 6px 8px 6px 16px;
-	color: #333;
+	color: #000;
 	text-decoration: none;
 	display: block;
+	transition-property: all;
+	transition-duration: 0.2s;
 }
 
 .sidenav a:hover {
-	background-color: #fff;
-	color: #333;
+	background-color: #66d;
+	color: #000;
+	width: 250px;
 }
 
 .main-dashboard {
-	margin-left: 160px;
+	margin-left: 200px;
 	padding: 0px 10px;
 }
 
@@ -44,7 +48,6 @@ th {
 /* } */
 html,
 body {
-	background-color: #eee;
 	height: 100%;
 	overflow: hidden;
 }

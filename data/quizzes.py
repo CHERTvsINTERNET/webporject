@@ -23,6 +23,6 @@ class Quiz(SqlAlchemyBase, SerializerMixin):
     rating = sa.Column(sa.Float)
     reward = sa.Column(sa.Integer)  # Зачем??
 
-    is_available = sa.Column(sa.Boolean)
+    is_available = sa.Column(sa.Boolean, default=False)
 
     author = orm.relationship("User", foreign_keys=[author_id])
