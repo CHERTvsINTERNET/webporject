@@ -1,4 +1,6 @@
 .venv
 /db/*
 __pycache__
+/data_files/*
+/static/data_files/*
 
