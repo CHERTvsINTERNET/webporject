@@ -1,9 +1,12 @@
+import io
 import os
 
 from flask import Flask, abort, redirect, render_template, request, send_file
 from flask_login import LoginManager, current_user, login_user, logout_user
+from PIL import Image
 from wtforms.validators import DataRequired
 
+from blueprints import question_image_getter
 from data import db_session
 from data.questions import Question
 from data.quizzes import Quiz
@@ -23,6 +26,7 @@ def main():
     if not "db" in os.listdir(".") or not os.path.isdir("db"):
         os.makedirs("db")
     db_session.global_init("./db/blob.db")
+    app.register_blueprint(question_image_getter)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -81,6 +85,9 @@ def add_quiz():
         quiz.author_id = current_user.id
         db_sess.add(quiz)
         db_sess.commit()
+        os.makedirs(os.path.join(app.instance_path,
+                    'question_imgs', f'quiz_{quiz.id}'))
+
         return redirect(f"/quizzes/redact/{quiz.id}/settings")
 
     return render_template("quiz_pre_redact.html", title="Создание квиза", form=form)
@@ -122,7 +129,8 @@ def add_question(quiz_id):
         if len(list(filter(lambda f: f, [form.is_answer1.data, form.is_answer2.data, form.is_answer3.data, form.is_answer4.data]))) < 2:
             return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques)
 
-        f = form.picture.data
+        f = Image.open(form.picture.data)
+        f.thumbnail((1270, 720), Image.Resampling.LANCZOS)
 
         question = Question()
         question.question = form.question.data
@@ -139,13 +147,12 @@ def add_question(quiz_id):
         db_sess.add(question)
         db_sess.commit()
 
-        path = os.path.join('static',
-                            'data_files',
-                            f"picture_for_question{question.id}_quiz{quiz_id}.jpg"
+        path = os.path.join(app.instance_path,
+                            'question_imgs',
+                            f'quiz_{quiz_id}',
+                            f"question_{question.id}.jpg"
                             )
 
-        question.image = "/".join(['/static', 'data_files',
-                                  f"picture_for_question{question.id}_quiz{quiz_id}.jpg"])
         f.save(path)
         db_sess.commit()
         return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
@@ -186,11 +193,11 @@ def question_redact(quiz_id, id):
         if form.is_answer4.data:
             form.answer4_text.data = question.answer4
 
-        return render_template("question_setting.html", form=form, quiz=quiz, questions=ques, pic=question.image)
+        return render_template("question_setting.html", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
     else:
         if form.validate_on_submit():
             if len(list(filter(lambda f: f, [form.is_answer1.data, form.is_answer2.data, form.is_answer3.data, form.is_answer4.data]))) < 2:
-                return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=question.image)
+                return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
 
             question.question = form.question.data
             if form.is_answer1.data:
@@ -215,16 +222,18 @@ def question_redact(quiz_id, id):
 
             if form.picture.validate(
                     form, extra_validators=[DataRequired()]):
-                f = form.picture.data
-                path = os.path.join('static',
-                                    'data_files',
-                                    f"picture_for_question{question.id}_quiz{quiz_id}.jpg"
+                f = Image.open(form.picture.data)
+                f.thumbnail((1270, 720), Image.Resampling.LANCZOS)
+                path = os.path.join(app.instance_path,
+                                    'question_imgs',
+                                    f'quiz_{quiz_id}',
+                                    f"question_{question.id}.jpg"
                                     )
                 f.save(path)
             db_sess.commit()
             return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
 
-        return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=question.image)
+        return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
 
 
 @login_manager.user_loader
