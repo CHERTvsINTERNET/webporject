@@ -30,8 +30,8 @@
 
 		<p>
 			{{ form.is_answer1.label }}<br>
-			{{ form.is_answer1(type="checkbox") }}
-			{{ form.answer1_text(type="text") }} <br>
+			{{ form.is_answer1(type="checkbox", id="answerCb1", onclick="changeAn1()") }}
+			{{ form.answer1_text(type="text", id="answerIn1") }} <br>
 			{% for error in form.is_answer1.errors %}
 		<p class="alert alert-danger" role="alert">
 			{{ error }}
@@ -46,8 +46,8 @@
 
 		<p>
 			{{ form.is_answer2.label }}<br>
-			{{ form.is_answer2(type="checkbox") }}
-			{{ form.answer2_text(type="text") }} <br>
+			{{ form.is_answer2(type="checkbox", id="answerCb2", onclick="changeAn2()") }}
+			{{ form.answer2_text(type="text", id="answerIn2") }} <br>
 			{% for error in form.is_answer2.errors %}
 		<p class="alert alert-danger" role="alert">
 			{{ error }}
@@ -63,8 +63,8 @@
 
 		<p>
 			{{ form.is_answer3.label }}<br>
-			{{ form.is_answer3(type="checkbox") }}
-			{{ form.answer3_text(type="text") }} <br>
+			{{ form.is_answer3(type="checkbox", id="answerCb3", onclick="changeAn3()") }}
+			{{ form.answer3_text(type="text", id="answerIn3") }} <br>
 			{% for error in form.is_answer3.errors %}
 		<p class="alert alert-danger" role="alert">
 			{{ error }}
@@ -79,8 +79,8 @@
 
 		<p>
 			{{ form.is_answer4.label }}<br>
-			{{ form.is_answer4(type="checkbox") }}
-			{{ form.answer4_text(type="text") }} <br>
+			{{ form.is_answer4(type="checkbox", id="answerCb4", onclick="changeAn4()") }}
+			{{ form.answer4_text(type="text", id="answerIn4") }} <br>
 			{% for error in form.is_answer4.errors %}
 		<p class="alert alert-danger" role="alert">
 			{{ error }}
@@ -96,5 +96,6 @@
 		<p>{{message}}</p>
 		<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
 	</form>
+	<script src="/static/js/question_redact.js"></script>
 </div>
 {% endblock %}

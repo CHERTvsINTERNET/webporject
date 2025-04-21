@@ -25,6 +25,7 @@ login_manager.init_app(app)
 def main():
     if not "db" in os.listdir(".") or not os.path.isdir("db"):
         os.makedirs("db")
+    os.makedirs("instance/question_imgs")
     db_session.global_init("./db/blob.db")
     app.register_blueprint(question_image_getter)
 
@@ -127,7 +128,7 @@ def add_question(quiz_id):
     form = QuestionAdd()
     if form.validate_on_submit():
         if len(list(filter(lambda f: f, [form.is_answer1.data, form.is_answer2.data, form.is_answer3.data, form.is_answer4.data]))) < 2:
-            return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques)
+            return render_template("question_setting.html", message="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques)
 
         f = Image.open(form.picture.data)
         f.thumbnail((1270, 720), Image.Resampling.LANCZOS)
@@ -157,7 +158,7 @@ def add_question(quiz_id):
         db_sess.commit()
         return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
 
-    return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques)
+    return render_template("question_setting.html", form=form, quiz=quiz, questions=ques)
 
 
 @app.route("/quizzes/redact/<int:quiz_id>/questions/<int:id>",
