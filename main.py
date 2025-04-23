@@ -258,13 +258,18 @@ def delete_quiz_yes(id):
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
-    if quiz.author_id != current_user.id:
+    if not quiz or quiz.author_id != current_user.id:
         abort(404)
 
     for q in db_sess.query(Question).filter(Question.quiz_id == id):
         db_sess.delete(q)
 
-    os.rmdir(f"instance/question_imgs/question_{id}")
+    for root, dirs, files in os.walk(os.path.join("instance", "question_imgs", f"quiz_{id}"), topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.rmdir(os.path.join(root, name))
+    os.rmdir(os.path.join("instance", "question_imgs", f"quiz_{id}"))
 
     db_sess.delete(quiz)
     db_sess.commit()
