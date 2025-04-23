@@ -35,7 +35,9 @@
 			{% endfor %}
 			</p>
 			<p>{{message}}</p>
-			<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+			<p>{{ form.submit(type="submit", class="btn btn-primary") }}
+				<a href="/quizzes/delete/{{ quiz.id }}" class="btn btn-danger">Удалить</a>
+			</p>
 		</form>
 	</div>
 	{% endblock %}

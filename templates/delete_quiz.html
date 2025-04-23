@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-center">
+	<form action="" , method="post">
+		<h3 class="text-center">Вы точно хотите удалить "{{ quiz.name }}"</h3>
+		<a href="{{ ha }}" class="btn btn-danger">Удалить</a>
+		<a href="{{ hr }}" class="btn btn-primary">Отмена</a>
+	</form>
+</div>
+{% endblock %}

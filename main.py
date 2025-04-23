@@ -1,4 +1,3 @@
-import io
 import os
 
 from flask import Flask, abort, redirect, render_template, request, send_file
@@ -25,7 +24,8 @@ login_manager.init_app(app)
 def main():
     if not "db" in os.listdir(".") or not os.path.isdir("db"):
         os.makedirs("db")
-    os.makedirs("instance/question_imgs")
+    if not "instance" in os.listdir(".") or "question_imgs" not in os.listdir("instance"):
+        os.makedirs("instance/question_imgs")
     db_session.global_init("./db/blob.db")
     app.register_blueprint(question_image_getter)
 
@@ -100,7 +100,7 @@ def redact_quiz_settings(id):
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
-    if quiz.author_id != current_user.id:
+    if not quiz or quiz.author_id != current_user.id:
         abort(404)
 
     form = QuizSettingsForm()
@@ -235,6 +235,41 @@ def question_redact(quiz_id, id):
             return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
 
         return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
+
+
+@app.route("/quizzes/delete/<int:id>")
+def delete_quiz(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if quiz.author_id != current_user.id:
+        abort(404)
+
+    href_reject = f"/quizzes/redact/{id}/settings"
+    href_aprove = f"/quizzes/delete/{id}/yes"
+
+    return render_template("delete_quiz.html", hr=href_reject, ha=href_aprove, quiz=quiz)
+
+
+@app.route("/quizzes/delete/<int:id>/yes")
+def delete_quiz_yes(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if quiz.author_id != current_user.id:
+        abort(404)
+
+    for q in db_sess.query(Question).filter(Question.quiz_id == id):
+        db_sess.delete(q)
+
+    os.rmdir(f"instance/question_imgs/question_{id}")
+
+    db_sess.delete(quiz)
+    db_sess.commit()
+
+    return redirect("/")
 
 
 @login_manager.user_loader
