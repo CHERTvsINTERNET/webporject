@@ -102,6 +102,8 @@ def redact_quiz_settings(id):
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
         abort(404)
+    if quiz.is_available:
+        return redirect(f"/quizzes/published/{id}")
 
     form = QuizSettingsForm()
     if request.method == "GET":
@@ -122,8 +124,11 @@ def add_question(quiz_id):
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(quiz_id)
-    if quiz.author_id != current_user.id:
+    if not quiz or quiz.author_id != current_user.id:
         abort(404)
+    if quiz.is_available:
+        return redirect(f"/quizzes/published/{id}")
+
     ques = db_sess.query(Question).filter(Question.quiz_id == quiz_id)
     form = QuestionAdd()
     if form.validate_on_submit():
@@ -168,12 +173,14 @@ def question_redact(quiz_id, id):
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(quiz_id)
-    if quiz.author_id != current_user.id:
-        print("Незя")
+    if not quiz or quiz.author_id != current_user.id:
         abort(404)
+
+    if quiz.is_available:
+        return redirect(f"/quizzes/published/{id}")
+
     question = db_sess.query(Question).get(id)
     if quiz_id != question.quiz_id:
-        print("Незя")
         abort(404)
 
     form = QuestionRedact()
@@ -243,7 +250,7 @@ def delete_quiz(id):
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
-    if quiz.author_id != current_user.id:
+    if not quiz or quiz.author_id != current_user.id:
         abort(404)
 
     href_reject = f"/quizzes/redact/{id}/settings"
@@ -275,6 +282,56 @@ def delete_quiz_yes(id):
     db_sess.commit()
 
     return redirect("/")
+
+
+@app.route("/quizzes/publish/<int:id>")
+def pub_quiz(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if not quiz or quiz.author_id != current_user.id:
+        abort(404)
+
+    if quiz.is_available:
+        return redirect(f"/quizzes/published/{id}")
+
+    href_reject = f"/quizzes/redact/{id}/settings"
+    href_aprove = f"/quizzes/publish/{id}/yes"
+
+    return render_template("quiz_publish.html", hr=href_reject, ha=href_aprove, quiz=quiz)
+
+
+@app.route("/quizzes/publish/<int:id>/yes")
+def pub_quiz_yes(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if not quiz or quiz.author_id != current_user.id:
+        abort(404)
+
+    if quiz.is_available:
+        return redirect(f"/quizzes/published/{id}")
+
+    quiz.is_available = True
+    db_sess.commit()
+
+    return redirect(f"/quizzes/published/{id}")
+
+
+@app.route("/quizzes/published/<int:id>")
+def published_dashboard(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if not quiz or quiz.author_id != current_user.id:
+        abort(404)
+    if not quiz.is_available:
+        return redirect(f"/quizzes/redact/{id}/settings")
+
+    return render_template("published_dashboard.html", quiz=quiz)
 
 
 @login_manager.user_loader
