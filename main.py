@@ -150,6 +150,7 @@ def add_question(quiz_id):
             question.answer4 = form.answer4_text.data
 
         question.quiz_id = quiz_id
+        question.true_answer = form.true_answer.data
         db_sess.add(question)
         db_sess.commit()
 
@@ -183,7 +184,7 @@ def question_redact(quiz_id, id):
     if quiz_id != question.quiz_id:
         abort(404)
 
-    form = QuestionRedact()
+    form = QuestionRedact(true_answer=question.true_answer)
     ques = db_sess.query(Question).filter(Question.quiz_id == quiz_id).all()
     if request.method == 'GET':
         form.question.data = question.question
@@ -226,6 +227,7 @@ def question_redact(quiz_id, id):
                 question.answer4 = None
 
             question.quiz_id = quiz_id
+            question.true_answer = form.true_answer.data
             db_sess.commit()
 
             if form.picture.validate(
@@ -332,6 +334,80 @@ def published_dashboard(id):
         return redirect(f"/quizzes/redact/{id}/settings")
 
     return render_template("published_dashboard.html", quiz=quiz)
+
+
+@app.route("/quizzes/play/<int:id>")
+def play_quiz(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if not quiz.is_available:
+        return abort(404)
+
+    redirect = request.args.get("redirect", None)
+    if redirect:
+        href_reject = redirect
+    else:
+        href_reject = "/"
+    href_aprove = f"/quizzes/play/{id}/yes"
+
+    return render_template("quiz_play_q.html", hr=href_reject, ha=href_aprove, quiz=quiz)
+
+
+@app.route("/quizzes/play/<int:id>/yes")
+def play_quiz_yes(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if not quiz.is_available:
+        return abort(404)
+
+    qs = db_sess.query(Question).filter(Question.quiz_id == id)
+    srcs = []
+    questions = []
+    answers = []
+    for q in qs:
+        srcs.append(f"/question_images?quiz_id={id}&question_id={q.id}")
+        questions.append(q.question)
+        answers.append(str(list(filter(lambda d: d is not None, [
+                       q.answer1, q.answer2, q.answer3, q.answer4]))))
+
+    q_ctn = len(srcs)
+    srcs = '"' + "\", \"".join(srcs) + '"'
+    questions = '"' + "\", \"".join(questions) + '"'
+    answers = ", ".join(answers)
+    return render_template("quiz_play.html", srcs=srcs, questions=questions, answers=answers, q_ctn=q_ctn)
+
+
+@app.route("/quizzes/calculate/<int:id>")
+def calc_result(id):
+    if not current_user.is_authenticated:
+        abort(404)
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).get(id)
+    if not quiz.is_available:
+        return abort(404)
+
+    results = []
+    for i, q in enumerate(db_sess.query(Question).filter(Question.quiz_id == id).all()):
+        ans = request.args.get(str(i))
+        if ans is None:
+            print(i, "is none")
+            abort(404)
+
+        results.append(q.true_answer == int(ans))
+
+    user = db_sess.query(User).get(current_user.id)
+    if quiz not in user.passages:
+        print("новый")
+        user.passages.append(quiz)
+        db_sess.commit()
+    else:
+        print("Уже был")
+
+    return render_template("calc_results.html", results=results, quiz=quiz)
 
 
 @login_manager.user_loader

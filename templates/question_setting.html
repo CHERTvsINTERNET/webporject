@@ -93,6 +93,13 @@
 		{% endfor %}
 		</p>
 
+		<h3>Правильный ответ?></h3>
+		<p>
+			{% for sub in form.true_answer %}
+			{{ sub }} {{ sub.label }} <br>
+			{%endfor%}
+		</p>
+
 		<p>{{message}}</p>
 		<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
 	</form>

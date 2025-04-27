@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="img-and-question">
+	<img src="" id="questionImg">
+	<h1 id="question">...</h1>
+</div>
+<div class="answer-buttons">
+	<a class="an1 an" id="an1" onclick="answer(1)">...</a>
+	<a class="an2 an" id="an2" onclick="answer(2)">...</a>
+	<a class="an3 an" id="an3" onclick="answer(3)">...</a>
+	<a class="an4 an" id="an4" onclick="answer(4)">...</a>
+</div>
+<script>
+	let srcs = [{{srcs|safe}}]
+	let questions = [{{questions|safe}}]
+	let answers = [{{answers|safe}}];
+	let ans = [];
+	let q_ctn = {{q_ctn|safe}};
+	let c_q = -1;
+	nextQuestion();
+	function answer(n) {
+		ans.push(n);
+		nextQuestion();
+	}
+
+	function nextQuestion() {
+		if (c_q == q_ctn - 1) {
+			console.log(ans);
+			let path = "/?";
+			path += "0=" + ans[0];
+			for (let i = 1; i < ans.length; i++) {
+				path += "&" + i + "=" + ans[i];
+			}
+			window.location.href = path;
+			return
+		}
+		c_q += 1;
+		document.querySelector('#questionImg').src = srcs[c_q];
+		document.querySelector('h1#question').innerHTML = questions[c_q];
+		document.querySelector('#an1').text = answers[c_q][0];
+		document.querySelector('#an2').text = answers[c_q][1];
+		if (answers[c_q].length > 2) {
+			document.querySelector('#an3').text = answers[c_q][2];
+			document.querySelector('#an3').style.display = "flex";
+		} else {
+			document.querySelector('#an3').style.display = "none";
+		}
+		if (answers[c_q].length > 3) {
+			document.querySelector('#an4').text = answers[c_q][3]
+			document.querySelector('#an4').style.display = "flex";
+		} else {
+			document.querySelector('#an4').style.display = "none";
+		}
+
+	}
+</script>
+{% endblock %}
