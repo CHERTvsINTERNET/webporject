@@ -1,0 +1,108 @@
+{% extends "quiz_settings.html" %}
+
+{% block settings %}
+<h1>Настройки вопроса</h1>
+<div>
+	<form action="" , method="post" enctype="multipart/form-data">
+		{{ form.hidden_tag() }}
+		<br>
+		<p>
+			{{ form.question.label }}<br>
+			{{ form.question(class="form-control", type="text") }} <br>
+			{% for error in form.question.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+		<p>
+			{% if pic %}
+			<img src="{{pic}}">
+			{% endif %}
+			{{ form.picture.label }}<br>
+			{{ form.picture(class="form-control", type="file") }} <br>
+			{% for error in form.picture.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+
+		<p>
+			{{ form.is_answer1.label }}<br>
+			{{ form.is_answer1(type="checkbox", id="answerCb1", onclick="changeAn1()") }}
+			{{ form.answer1_text(type="text", id="answerIn1") }} <br>
+			{% for error in form.is_answer1.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		{% for error in form.answer1_text.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+
+		<p>
+			{{ form.is_answer2.label }}<br>
+			{{ form.is_answer2(type="checkbox", id="answerCb2", onclick="changeAn2()") }}
+			{{ form.answer2_text(type="text", id="answerIn2") }} <br>
+			{% for error in form.is_answer2.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		{% for error in form.answer2_text.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+
+
+		<p>
+			{{ form.is_answer3.label }}<br>
+			{{ form.is_answer3(type="checkbox", id="answerCb3", onclick="changeAn3()") }}
+			{{ form.answer3_text(type="text", id="answerIn3") }} <br>
+			{% for error in form.is_answer3.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		{% for error in form.answer3_text.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+
+		<p>
+			{{ form.is_answer4.label }}<br>
+			{{ form.is_answer4(type="checkbox", id="answerCb4", onclick="changeAn4()") }}
+			{{ form.answer4_text(type="text", id="answerIn4") }} <br>
+			{% for error in form.is_answer4.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		{% for error in form.answer4_text.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+
+		<h3>Правильный ответ?></h3>
+		<p>
+			{% for sub in form.true_answer %}
+			{{ sub }} {{ sub.label }} <br>
+			{%endfor%}
+		</p>
+
+		<p>{{message}}</p>
+		<p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+	</form>
+	<script src="/static/js/question_redact.js"></script>
+</div>
+{% endblock %}

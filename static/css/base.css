@@ -1,29 +1,33 @@
 .sidenav {
 	height: 100%;
-	width: 160px;
+	width: 200px;
 	position: fixed;
 	z-index: 1;
 	top: 0;
 	left: 0;
-	background-color: #ffe;
+	background-color: #88f;
+	border-right: 9px #44a solid;
 	overflow-x: hidden;
 	padding-top: 20px;
 }
 
 .sidenav a {
 	padding: 6px 8px 6px 16px;
-	color: #333;
+	color: #000;
 	text-decoration: none;
 	display: block;
+	transition-property: all;
+	transition-duration: 0.2s;
 }
 
 .sidenav a:hover {
-	background-color: #fff;
-	color: #333;
+	background-color: #66d;
+	color: #000;
+	width: 250px;
 }
 
 .main-dashboard {
-	margin-left: 160px;
+	margin-left: 200px;
 	padding: 0px 10px;
 }
 
@@ -38,13 +42,73 @@ th {
 	border: 2px solid;
 }
 
+.img-and-question {
+	justify-content: center;
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	height: 65%;
+}
+
+.img-and-question img {
+	height: 80%;
+	border-radius: 10px;
+}
+
+.img-and-question h1 {
+	height: 20%;
+	margin: 0;
+}
+
+.answer-buttons {
+	height: 35%;
+	justify-content: center;
+	display: grid;
+	grid-template-columns: 1fr 1fr
+}
+
+.answer-buttons>.an {
+	text-decoration: none;
+	color: white;
+	background-color: #63d;
+	border-radius: 10px;
+	margin: 15px;
+	text-align: center;
+	justify-content: center;
+	display: flex;
+	flex-direction: column;
+	font-size: 1.7em;
+	transition: 0.2s;
+}
+
+.answer-buttons>.an:hover {
+	background-color: #318;
+}
+
+.right-answer {
+	display: inline-block;
+	width: 1.5em;
+	height: 1.5em;
+	background-color: #3e3;
+	border: 2px solid #1d1;
+	border-radius: 50%;
+}
+
+.wrong-answer {
+	display: inline-block;
+	width: 1.5em;
+	height: 1.5em;
+	background-color: #e33;
+	border: 2px solid #d11;
+	border-radius: 50%;
+}
+
 /* .login-center { */
 /* 	max-width: 300px; */
 /* 	max-height: 300px; */
 /* } */
 html,
 body {
-	background-color: #eee;
 	height: 100%;
 	overflow: hidden;
 }
@@ -65,6 +129,7 @@ body {
 }
 
 main {
+	overflow: auto;
 	padding: 20px;
 	height: 100%;
 }

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-center">
+	<form action="" , method="post">
+		<h3 class="text-center">Квиз "{{ quiz.name }}" опубликован</h3>
+		<p>Вы не моженте его изменить</p>
+		<center><a href="/quizzes/delete/{{ quiz.id }}" class="btn btn-danger">Удалить</a></center>
+	</form>
+</div>
+{% endblock %}

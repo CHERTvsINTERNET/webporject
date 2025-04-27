@@ -15,10 +15,12 @@ class Question(SqlAlchemyBase, SerializerMixin):
 
     image = sa.Column(sa.String)
 
-    answer1 = sa.Column(sa.String, nullable=False)
-    answer2 = sa.Column(sa.String, nullable=False)
+    answer1 = sa.Column(sa.String)
+    answer2 = sa.Column(sa.String)
     answer3 = sa.Column(sa.String)
     answer4 = sa.Column(sa.String)
+
+    true_answer = sa.Column(sa.Integer, nullable=True)
 
     quiz_id = sa.Column(sa.Integer, sa.ForeignKey("quizzes.id"))
 

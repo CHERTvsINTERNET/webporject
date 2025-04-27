@@ -1,5 +1,6 @@
 import sqlalchemy
 from flask_login import UserMixin
+from sqlalchemy import orm
 from sqlalchemy_serializer import SerializerMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -15,6 +16,8 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     email = sqlalchemy.Column(sqlalchemy.String, unique=True, nullable=True)
     hashed_password = sqlalchemy.Column(
         sqlalchemy.String, nullable=True)
+    passages = orm.relationship(
+        "Quiz", secondary="association_passage", backref="users")
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
