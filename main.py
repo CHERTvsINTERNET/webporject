@@ -1,18 +1,23 @@
 import os
-
-from flask import Flask, abort, redirect, render_template, request, send_file
+import datetime
+from flask import Flask, abort, redirect, render_template, request, send_file, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user
 from PIL import Image
+from sqlalchemy import desc
 from wtforms.validators import DataRequired
 
 from blueprints import question_image_getter
 from data import db_session
 from data.questions import Question
 from data.quizzes import Quiz
+from data.themes import Theme
 from data.user import User
 from forms.question import QuestionAdd, QuestionRedact
 from forms.quiz import QuizAddForm, QuizSettingsForm
 from forms.user import UserLoginForm, UserRegisterForm
+
+from objects.information_template import InfTempl
+import fuckit
 
 app = Flask(__file__)
 app.config['SECRET_KEY'] = 'mega-slohni-sekret-key-voobshe-nikto-ne-dogadaetsa'
@@ -40,12 +45,16 @@ def login_page():
         db_sess = db_session.create_session()
 
         user = db_sess.query(User).filter(
-            User.email == form.email.data).first()
+            User.email == form.email.data
+        ).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         form.password.data = ""
-        return render_template("login.html", message="Неверное email или пароль", form=form, title="Авторизация")
+        return render_template(
+            "login.html", message="Неверное email или пароль",
+            form=form, title="Авторизация"
+        )
     return render_template("login.html", form=form, title="Авторизация")
 
 
@@ -57,11 +66,17 @@ def register_page():
     form = UserRegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
-            return render_template("register.html", form=form, title="Регистрация", message="Пароли не совпадают", current_user=current_user)
+            return render_template(
+                "register.html", form=form, title="Регистрация",
+                message="Пароли не совпадают", current_user=current_user
+            )
         db_sess = db_session.create_session()
         # если почта ужесуществует
         if db_sess.query(User).filter(User.email == form.email.data).first():
-            return render_template("register.html", form=form, title="Регистрация", message="Такая почта уже зарегистрированна", current_user=current_user)
+            return render_template(
+                "register.html", form=form, title="Регистрация",
+                message="Такая почта уже зарегистрированна", current_user=current_user
+            )
         user = User()
         user.name = form.name.data
         user.email = form.email.data
@@ -69,7 +84,10 @@ def register_page():
         db_sess.add(user)
         db_sess.commit()
         return redirect("/login")
-    return render_template("register.html", form=form, title="Регистрация", current_user=current_user)
+    return render_template(
+        "register.html", form=form, title="Регистрация",
+        current_user=current_user
+    )
 
 
 @app.route("/quizzes/add", methods=["GET", "POST"])
@@ -86,8 +104,12 @@ def add_quiz():
         quiz.author_id = current_user.id
         db_sess.add(quiz)
         db_sess.commit()
-        os.makedirs(os.path.join(app.instance_path,
-                    'question_imgs', f'quiz_{quiz.id}'))
+        os.makedirs(
+            os.path.join(
+                app.instance_path,
+                'question_imgs', f'quiz_{quiz.id}'
+            )
+        )
 
         return redirect(f"/quizzes/redact/{quiz.id}/settings")
 
@@ -115,7 +137,10 @@ def redact_quiz_settings(id):
             quiz.description = form.quiz_description.data
             db_sess.commit()
     ques = db_sess.query(Question).filter(Question.quiz_id == id)
-    return render_template("quiz_settings.html", form=form, title='Настройки квиза', questions=ques, quiz=quiz)
+    return render_template(
+        "quiz_settings.html", form=form, title='Настройки квиза',
+        questions=ques, quiz=quiz
+    )
 
 
 @app.route("/quizzes/redact/<int:quiz_id>/questions/add", methods=["GET", "POST"])
@@ -132,8 +157,18 @@ def add_question(quiz_id):
     ques = db_sess.query(Question).filter(Question.quiz_id == quiz_id)
     form = QuestionAdd()
     if form.validate_on_submit():
-        if len(list(filter(lambda f: f, [form.is_answer1.data, form.is_answer2.data, form.is_answer3.data, form.is_answer4.data]))) < 2:
-            return render_template("question_setting.html", message="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques)
+        if len(
+                list(
+                    filter(
+                        lambda f: f, [form.is_answer1.data, form.is_answer2.data,
+                                      form.is_answer3.data, form.is_answer4.data]
+                    )
+                )
+        ) < 2:
+            return render_template(
+                "question_setting.html",
+                message="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques
+            )
 
         f = Image.open(form.picture.data)
         f.thumbnail((1270, 720), Image.Resampling.LANCZOS)
@@ -154,11 +189,12 @@ def add_question(quiz_id):
         db_sess.add(question)
         db_sess.commit()
 
-        path = os.path.join(app.instance_path,
-                            'question_imgs',
-                            f'quiz_{quiz_id}',
-                            f"question_{question.id}.jpg"
-                            )
+        path = os.path.join(
+            app.instance_path,
+            'question_imgs',
+            f'quiz_{quiz_id}',
+            f"question_{question.id}.jpg"
+        )
 
         f.save(path)
         db_sess.commit()
@@ -167,8 +203,10 @@ def add_question(quiz_id):
     return render_template("question_setting.html", form=form, quiz=quiz, questions=ques)
 
 
-@app.route("/quizzes/redact/<int:quiz_id>/questions/<int:id>",
-           methods=["GET", "POST"])
+@app.route(
+    "/quizzes/redact/<int:quiz_id>/questions/<int:id>",
+    methods=["GET", "POST"]
+)
 def question_redact(quiz_id, id):
     if not current_user.is_authenticated:
         abort(404)
@@ -202,11 +240,25 @@ def question_redact(quiz_id, id):
         if form.is_answer4.data:
             form.answer4_text.data = question.answer4
 
-        return render_template("question_setting.html", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
+        return render_template(
+            "question_setting.html", form=form, quiz=quiz,
+            questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}'
+        )
     else:
         if form.validate_on_submit():
-            if len(list(filter(lambda f: f, [form.is_answer1.data, form.is_answer2.data, form.is_answer3.data, form.is_answer4.data]))) < 2:
-                return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
+            if len(
+                    list(
+                        filter(
+                            lambda f: f, [form.is_answer1.data, form.is_answer2.data,
+                                          form.is_answer3.data, form.is_answer4.data]
+                        )
+                    )
+            ) < 2:
+                return render_template(
+                    "question_setting.html",
+                    mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz,
+                    questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}'
+                )
 
             question.question = form.question.data
             if form.is_answer1.data:
@@ -231,19 +283,25 @@ def question_redact(quiz_id, id):
             db_sess.commit()
 
             if form.picture.validate(
-                    form, extra_validators=[DataRequired()]):
+                    form, extra_validators=[DataRequired()]
+            ):
                 f = Image.open(form.picture.data)
                 f.thumbnail((1270, 720), Image.Resampling.LANCZOS)
-                path = os.path.join(app.instance_path,
-                                    'question_imgs',
-                                    f'quiz_{quiz_id}',
-                                    f"question_{question.id}.jpg"
-                                    )
+                path = os.path.join(
+                    app.instance_path,
+                    'question_imgs',
+                    f'quiz_{quiz_id}',
+                    f"question_{question.id}.jpg"
+                )
                 f.save(path)
             db_sess.commit()
             return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
 
-        return render_template("question_setting.html", mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}')
+        return render_template(
+            "question_setting.html", mesage="Должно быть как минимум два вопроса",
+            form=form, quiz=quiz, questions=ques,
+            pic=f'/question_images?quiz_id={quiz_id}&question_id={id}'
+        )
 
 
 @app.route("/quizzes/delete/<int:id>")
@@ -371,14 +429,25 @@ def play_quiz_yes(id):
     for q in qs:
         srcs.append(f"/question_images?quiz_id={id}&question_id={q.id}")
         questions.append(q.question)
-        answers.append(str(list(filter(lambda d: d is not None, [
-                       q.answer1, q.answer2, q.answer3, q.answer4]))))
+        answers.append(
+            str(
+                list(
+                    filter(
+                        lambda d: d is not None, [
+                            q.answer1, q.answer2, q.answer3, q.answer4]
+                    )
+                )
+            )
+        )
 
     q_ctn = len(srcs)
     srcs = '"' + "\", \"".join(srcs) + '"'
     questions = '"' + "\", \"".join(questions) + '"'
     answers = ", ".join(answers)
-    return render_template("quiz_play.html", srcs=srcs, questions=questions, answers=answers, q_ctn=q_ctn)
+    return render_template(
+        "quiz_play.html", srcs=srcs,
+        questions=questions, answers=answers, q_ctn=q_ctn, quiz=quiz
+    )
 
 
 @app.route("/quizzes/calculate/<int:id>")
@@ -414,6 +483,52 @@ def calc_result(id):
 def load_user(id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(id)
+
+
+@app.route('/', methods=["GET", "POST"])
+@app.route('/index', methods=["GET", "POST"])
+@app.route('/menu', methods=["GET", "POST"])
+def index():
+    global monce1, monce2, week1, week2
+    db_sess = db_session.create_session()
+    if request.method == 'GET':
+        print()
+        monce = db_sess.query(Quiz).filter(
+            Quiz.created_date.between(
+                datetime.datetime.today().date() - datetime.timedelta(days=30),
+                datetime.datetime.today().date() - datetime.timedelta(days=7)
+            )
+        ).order_by(desc(Quiz.rating)).all()
+        week = db_sess.query(Quiz).filter(
+            Quiz.created_date >=
+            datetime.datetime.today().date() - datetime.timedelta(days=7)
+        ).order_by(desc(Quiz.rating)).all()
+        monce1, monce2 = InfTempl(), InfTempl()
+        week1, week2 = InfTempl(), InfTempl()
+        print(week[0].name)
+        themes = db_sess.query(Theme).get(week[0].themeinquiz).name
+        print(themes)
+
+        @fuckit
+        def updateinf(monce, week, db_sess):
+            monce1.update(title=monce[0].name, theme=db_sess.query(Theme).get(monce[0].themeinquiz).name)
+            monce2.update(title=monce[1].name, theme=db_sess.query(Theme).get(monce[1].themeinquiz).name)
+            week1.update(title=week[0].name, theme=db_sess.query(Theme).get(week[0].themeinquiz).name)
+            week2.update(title=week[1].name, theme=db_sess.query(Theme).get(week[1].themeinquiz).name)
+
+        updateinf(monce, week, db_sess)
+        print(monce1.title, monce2.title, week1.title, week2.title)
+        return render_template(
+            "index.html", monce_name1=monce1.title, monce_name2=monce2.title, week_name1=week1.title,
+            week_name2=week2.title, monce_theme1=monce1.theme, monce_theme2=monce2.theme, week_theme1=week1.theme,
+            week_theme2=week2.theme
+        )
+    if request.method == 'POST':
+        code = request.form['code']
+        quiz = db_sess.query(Quiz).get(code)
+        if not quiz:
+            abort(404)
+        return redirect(f'/quizzes/play/{code}')
 
 
 if __name__ == "__main__":

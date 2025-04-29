@@ -17,12 +17,12 @@ class Quiz(SqlAlchemyBase, SerializerMixin):
     description = sa.Column(sa.String)
     author_id = sa.Column(sa.Integer, sa.ForeignKey("users.id"))
     created_date = sa.Column(
-        sa.DateTime,
-        default=datetime.now
+        sa.Date,
+        default=datetime.now().date
     )
     rating = sa.Column(sa.Float)
     reward = sa.Column(sa.Integer)  # Зачем??
-
+    themeinquiz = sa.Column(sa.Integer, sa.ForeignKey("themes.id"), nullable=False)
     is_available = sa.Column(sa.Boolean, default=False)
 
     author = orm.relationship("User", foreign_keys=[author_id])

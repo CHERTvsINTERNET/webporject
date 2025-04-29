@@ -27,7 +27,7 @@
 	function nextQuestion() {
 		if (c_q == q_ctn - 1) {
 			console.log(ans);
-			let path = "/?";
+			let path = "/quizzes/calculate/{{ quiz.id }}?";
 			path += "0=" + ans[0];
 			for (let i = 1; i < ans.length; i++) {
 				path += "&" + i + "=" + ans[i];

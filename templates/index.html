@@ -26,15 +26,15 @@
 </header>
 <ul class="grid">
     <li class="red">
-        <div class="first-section-left">
+        <a class="first-section-left" href='/quizzes/add' >
             <img src="../static/image/plus.png" class="plus">
             <p class="right"><b>СОЗДАТЬ</b></p>
-        </div>
+        </a>
     </li>
     <li class="green">
         <div class="inputform">
-            <form>
-                <input type="text" placeholder="Введите код квиза">
+            <form method="POST" action="" name="code">
+                <input type="text" name="code" placeholder="Введите код квиза" required>
                 <button type="submit"></button>
             </form>
         </div>
@@ -51,30 +51,30 @@
     <li>
         <div class="chart"><b>Топ месяца</b></div>
         <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo1">
-        <div class="text-sc text1">
-            <b>ОЧЕНЬ КРУТОЕ НАЗВАНИЕ gdfsgsdfgsdf gsdgfsdgfsdgfsg dfgsdfgsdfgsdfgsdfg</b>
+        <div class="text-sc text1 nametext">
+            <b>{{ monce_name1 }}</b>
         </div>
-        <div class="theme-sc">MAIN THEME</div>
+        <div class="theme-sc">{{ monce_theme1 }}</div>
 
         <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo2">
-        <div class="text-sc text2">
-            <b>ОЧЕНЬ КРУТОЕ НАЗВАНИЕ gdfsgsdfgsdf gsdgfsdgfsdgfsg dfgsdfgsdfgsdfgsdfg</b>
+        <div class="text-sc text2 nametext">
+            <b>{{ monce_name2 }}</b>
         </div>
-        <div class="theme-sc theme1">MAIN THEME</div>
+        <div class="theme-sc theme1">{{ monce_theme2 }}</div>
     </li>
     <li>
         <div class="chart"><b>Топ недели</b></div>
         <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo1">
-        <div class="text-sc text1">
-            <b>ОЧЕНЬ КРУТОЕ НАЗВАНИЕ gdfsgsdfgsdf gsdgfsdgfsdgfsg dfgsdfgsdfgsdfgsdfg</b>
+        <div class="text-sc text1 nametext">
+            <b>{{ week_name1 }}</b>
         </div>
-        <div class="theme-sc">MAIN THEME</div>
+        <div class="theme-sc">{{ week_theme1 }}</div>
 
         <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo2">
-        <div class="text-sc text2">
-            <b>ОЧЕНЬ КРУТОЕ НАЗВАНИЕ gdfsgsdfgsdf gsdgfsdgfsdgfsg dfgsdfgsdfgsdfgsdfg</b>
+        <div class="text-sc text2 nametext">
+            <b>{{ week_name2 }}</b>
         </div>
-        <div class="theme-sc theme1">MAIN THEME</div>
+        <div class="theme-sc theme1">{{ monce_theme2 }}</div>
     </li>
 </ul>
 </body>

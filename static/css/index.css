@@ -149,8 +149,11 @@ background: #6F47D7;
 }
 
 .first-section-left {
+    position: absolute;
     text-align: center;
     margin-top: 75px;
+    padding-left: 120px;
+    text-decoration: none;
 }
 
 p {
@@ -301,4 +304,8 @@ margin: 0;
 
 .theme1 {
         margin-top: 120px;
+}
+
+.nametext {
+    font-size: 32px;
 }
