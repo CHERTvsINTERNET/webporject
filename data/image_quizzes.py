@@ -2,7 +2,7 @@ import sqlalchemy as sa
 
 from .db_session import SqlAlchemyBase
 
-association_table_passage = sa.Table(
+association_table_img = sa.Table(
     'association_image_quizzes',
     SqlAlchemyBase.metadata,
     sa.Column(

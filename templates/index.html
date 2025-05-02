@@ -1,29 +1,6 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title></title>
-    <link rel="stylesheet" href="../static/css/index.css"/>
-</head>
-<body>
-<header class="header">
-    <div class="container">
-        <div class="header__inner">
-            <a class="logo" href="#">Logo</a>
-            <nav class="menu">
-                <ul class="menu__list">
-                    <li class="menu__list-item">
-                        <a class="menu__list-link" href="#">Контакты</a>
-                    </li>
-                    <li class="menu__list-item">
-                        <a class="menu__list-link" href="#">Профиль</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
-</header>
+{% extends "base_header.html" %}
+
+{% block body %}
 <ul class="grid">
     <li class="red">
         <a class="first-section-left" href='/quizzes/add' >
@@ -34,18 +11,46 @@
     <li class="green">
         <div class="inputform">
             <form method="POST" action="" name="code">
-                <input type="text" name="code" placeholder="Введите код квиза" required>
+                <input type="text" name="code" placeholder="Поиск по названию / id" required>
                 <button type="submit"></button>
             </form>
         </div>
     </li>
 </ul>
-<div class="first-section">
-        <img src="../static/quizzes/test.jpg" width="195" class="photo">
-        <div class="text-fs">
-            <b>ОЧЕНЬ КРУТОЕ НАЗВАНИЕ gdfsgsdfgsdf gsdgfsdgfsdgfsg dfgsdfgsdfgsdfgsdfg</b>
+        <div class="container">
+        <div class="carousel-container w-50 h-50 mx-auto position-relative">
+            <div id="myCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                     <div class="carousel-item active">
+
+                        <div>
+                        <img src="../static/quizzes/test.jpg" width="195" class="photo">
+                        <div class="text-fs">
+                            <b>{{ name_start }}</b>
+                        </div>
+                            <div class="theme-fs">
+                                {{ theme_start }}</div>
+                        </div>
+                    </div>
+                    </div>
+                <div class="carousel-inner">
+                    {% for name, theme in recomendation %}
+                    <div class="carousel-item" data-interval="100">
+                        <div>
+                        <img src="../static/quizzes/test.jpg" width="195" class="photo">
+                        <div class="text-fs">
+                            <b>{{name}}</b>
+                        </div>
+                            <div class="text-fs">
+                                <div class="theme-fs">{{theme}}</div></div>
+                        </div>
+                    </div></div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
-        <div class="theme-fs">MAIN THEME</div>
+
+
 </div>
 <ul class="second-section">
     <li>
@@ -77,5 +82,4 @@
         <div class="theme-sc theme1">{{ monce_theme2 }}</div>
     </li>
 </ul>
-</body>
-</html>
+{% endblock %}

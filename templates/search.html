@@ -1,0 +1,29 @@
+{% extends "base_header.html" %}
+
+{% block body %}
+<div class="inputform search-inputform">
+            <form method="POST" action="" name="code_searcher">
+                <input type="text" name="code_searcher" placeholder="Поиск по названию / id" required>
+                <button type="submit"></button>
+            </form>
+</div>
+{% for item in quizzeshere%}
+<div class="col-md6 border rounded ww" onclick="location.href='/quizzes/play/{{item.id}}'">
+    <h2 class="marg">{{item.name}}</h2>
+    <div class="marg">
+        {{item.description}}
+    </div>
+    <h5 class="marg">
+        Текущий рейтинг - {{item.rating}}
+    </h5>
+
+    <div class="marg marg-btn">
+        {% if item.author.id == current_user.id %}
+        <a href="/quizzes/delete/{{ item.id }}" class="btn btn-danger marg marg-btn">
+            Удалить
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

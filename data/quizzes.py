@@ -22,7 +22,7 @@ class Quiz(SqlAlchemyBase, SerializerMixin):
     )
     rating = sa.Column(sa.Float)
     reward = sa.Column(sa.Integer)  # Зачем??
-    themeinquiz = sa.Column(sa.Integer, sa.ForeignKey("themes.id"), nullable=False)
     is_available = sa.Column(sa.Boolean, default=False)
 
     author = orm.relationship("User", foreign_keys=[author_id])
+    themes = orm.relationship("Theme", secondary="association_theme", backref="quizzes")

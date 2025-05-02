@@ -1,23 +1,27 @@
 import os
 import datetime
+
+import sqlalchemy
 from flask import Flask, abort, redirect, render_template, request, send_file, url_for
-from flask_login import LoginManager, current_user, login_user, logout_user
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from PIL import Image
 from sqlalchemy import desc
 from wtforms.validators import DataRequired
 
 from blueprints import question_image_getter
 from data import db_session
+from data.passage import association_table_passage
 from data.questions import Question
 from data.quizzes import Quiz
 from data.themes import Theme
+from data.themes_in_quiz import AssociationTheme
 from data.user import User
 from forms.question import QuestionAdd, QuestionRedact
 from forms.quiz import QuizAddForm, QuizSettingsForm
 from forms.user import UserLoginForm, UserRegisterForm
 
 from objects.information_template import InfTempl
-import fuckit
+from random import choice, shuffle, sample
 
 app = Flask(__file__)
 app.config['SECRET_KEY'] = 'mega-slohni-sekret-key-voobshe-nikto-ne-dogadaetsa'
@@ -49,7 +53,7 @@ def login_page():
         ).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect("/profile")
         form.password.data = ""
         return render_template(
             "login.html", message="Неверное email или пароль",
@@ -312,8 +316,10 @@ def delete_quiz(id):
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
         abort(404)
-
-    href_reject = f"/quizzes/redact/{id}/settings"
+    if quiz.is_available == 0:
+        href_reject = f"/quizzes/redact/{id}/settings"
+    else:
+        href_reject = f"/profile"
     href_aprove = f"/quizzes/delete/{id}/yes"
 
     return render_template("delete_quiz.html", hr=href_reject, ha=href_aprove, quiz=quiz)
@@ -462,6 +468,7 @@ def calc_result(id):
     results = []
     for i, q in enumerate(db_sess.query(Question).filter(Question.quiz_id == id).all()):
         ans = request.args.get(str(i))
+        print(ans)
         if ans is None:
             print(i, "is none")
             abort(404)
@@ -489,7 +496,6 @@ def load_user(id):
 @app.route('/index', methods=["GET", "POST"])
 @app.route('/menu', methods=["GET", "POST"])
 def index():
-    global monce1, monce2, week1, week2
     db_sess = db_session.create_session()
     if request.method == 'GET':
         print()
@@ -505,30 +511,129 @@ def index():
         ).order_by(desc(Quiz.rating)).all()
         monce1, monce2 = InfTempl(), InfTempl()
         week1, week2 = InfTempl(), InfTempl()
-        print(week[0].name)
-        themes = db_sess.query(Theme).get(week[0].themeinquiz).name
-        print(themes)
 
-        @fuckit
-        def updateinf(monce, week, db_sess):
-            monce1.update(title=monce[0].name, theme=db_sess.query(Theme).get(monce[0].themeinquiz).name)
-            monce2.update(title=monce[1].name, theme=db_sess.query(Theme).get(monce[1].themeinquiz).name)
+        if len(monce) >= 2:
+            monce1.update(title=monce[0].name, theme=monce[0].themes[0].name)
+            monce2.update(title=monce[1].name, theme=monce[1].themes[0].name)
+        elif len(monce) == 1:
+            monce1.update(title=monce[0].name, theme=monce[0].themes[0].name)
+        if len(week) >= 2:
+            week1.update(title=week[0].name, theme=week[0].themes[0].name)
+            week2.update(title=week[1].name, theme=week[1].themes[0].name)
+        elif len(week) == 1:
             week1.update(title=week[0].name, theme=db_sess.query(Theme).get(week[0].themeinquiz).name)
-            week2.update(title=week[1].name, theme=db_sess.query(Theme).get(week[1].themeinquiz).name)
 
-        updateinf(monce, week, db_sess)
+        recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(), InfTempl(), InfTempl()
+        recommendation = list()
+        if current_user.is_authenticated:
+            complited = db_sess.query(association_table_passage).filter_by(users=current_user.id).all()
+            if complited:
+                complited_quizzes = list(map(lambda x: x.quizzes, complited))
+                print(complited_quizzes, 'c')
+                all_themes = [db_sess.query(Quiz).get(id).themes[0].name for id in complited_quizzes]
+                for el in sorted(list(set(all_themes)), key=lambda x: all_themes.count(x), reverse=True):
+                    res_list = list(
+                        filter(
+                            lambda x: x.themes[0].name == el and x.id not in complited_quizzes,
+                            db_sess.query(Quiz).all()
+                        )
+                    )
+                    print(list(map(lambda x: x.name, res_list)))
+                    if res_list:
+                        result = choice(res_list)
+                        recommendation_main_theme.update(title=result.name, theme=result.themes[0].name)
+                        print(result.name, result.themes[0].name)
+                        recommendation.append(result.id)
+                        break
+                for el in sample(all_themes, len(all_themes)):
+                    res_list = list(
+                        filter(
+                            lambda x: x.themes[
+                                          0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
+                            db_sess.query(Quiz).all()
+                        )
+                    )
+                    print(list(map(lambda x: x.name, res_list)))
+                    if res_list:
+                        result = choice(res_list)
+                        recommendation_random_theme.update(title=result.name, theme=result.themes[0].name)
+                        print(result.name, result.themes[0].name)
+                        recommendation.append(result.id)
+                        break
+                res_list1 = list(
+                    filter(
+                        lambda x: x.id not in complited_quizzes and x.id not in recommendation,
+                        db_sess.query(Quiz).all()
+                    )
+                )
+                if res_list1:
+                    res1 = choice(res_list1)
+                    recommendation_random.update(title=res1.name, theme=res1.themes[0].name)
+                    recommendation.append(res1.id)
+
+        print(recommendation_main_theme.title, recommendation_random_theme.title, recommendation_random.title, 'log1')
+        print(
+            recommendation_main_theme.title,
+            recommendation_main_theme.theme,
+            [recommendation_random_theme.title, recommendation_random.title],
+            [recommendation_random_theme.theme, recommendation_random.theme]
+        )
         print(monce1.title, monce2.title, week1.title, week2.title)
+        rec_list = [(recommendation_random_theme.title, recommendation_random_theme.theme),
+                    (recommendation_random.title, recommendation_random.theme)]
         return render_template(
             "index.html", monce_name1=monce1.title, monce_name2=monce2.title, week_name1=week1.title,
             week_name2=week2.title, monce_theme1=monce1.theme, monce_theme2=monce2.theme, week_theme1=week1.theme,
-            week_theme2=week2.theme
+            week_theme2=week2.theme, name_start=recommendation_main_theme.title,
+            theme_start=recommendation_main_theme.theme, recomendation=rec_list
+
         )
     if request.method == 'POST':
         code = request.form['code']
-        quiz = db_sess.query(Quiz).get(code)
-        if not quiz:
-            abort(404)
-        return redirect(f'/quizzes/play/{code}')
+        if code.isdigit():
+            quiz = db_sess.query(Quiz).get(code)
+            if not quiz:
+                abort(404)
+            return redirect(f'/quizzes/play/{code}')
+        else:
+            return redirect(f'/search/{code}')
+
+
+@app.route("/profile")
+def profile():
+    if not current_user.is_authenticated:
+        return redirect(f"/login")
+    db_sess = db_session.create_session()
+
+    qs = list(filter(lambda x: x.author.id == current_user.id, db_sess.query(Quiz)))
+    complited = list(filter(lambda x: x.users == current_user.id, db_sess.query(association_table_passage)))
+    return render_template("profile.html", myquizzes=qs, lenqs=len(qs), lencomplited=len(complited))
+
+
+@app.route('/search/<string:code>', methods=["GET", "POST"])
+def search(code):
+    db_sess = db_session.create_session()
+    if request.method == 'GET':
+        seleceter = list(
+            filter(lambda x: code.lower() in x.name.lower(), db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
+            )
+        return render_template("search.html", quizzeshere=seleceter)
+    if request.method == 'POST':
+        code = request.form['code_searcher']
+        if code.isdigit():
+            quiz = db_sess.query(Quiz).get(code)
+            if not quiz:
+                abort(404)
+            return redirect(f'/quizzes/play/{code}')
+        else:
+            return redirect(f'/search/{code}')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 if __name__ == "__main__":

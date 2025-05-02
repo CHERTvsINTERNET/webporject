@@ -1,0 +1,42 @@
+{% extends "base_header.html" %}
+
+{% block body %}
+<div class="mainprofile col-md6 border border-info border-5 ww1">
+    <div class="profile-div prof-name" style="font-size: 74px">{{ current_user.name }}</div>
+    <div class="profile-div bg-info bg-gradient ff " style="font-size: 20px">Колличество <i>созданных</i> квизов - {{lenqs}}</div>
+    <div class="profile-div bg-info bg-gradient ff" style="font-size: 20px">Колличество <i>пройденных</i> квизов - {{lencomplited}}</div>
+    <a href="/logout" class="btn btn-warning mm1">Выйти</a>
+</div>
+
+
+
+
+
+
+{% for item in myquizzes%}
+<div class="col-md6 border rounded ww" onclick="location.href='/quizzes/play/{{item.id}}'">
+    <h2 class="marg">{{item.name}}</h2>
+    <div class="marg">
+        {{item.description}}
+    </div>
+    <h5 class="marg">
+        Текущий рейтинг - {{item.rating}}
+    </h5>
+
+    <div class="marg marg-btn">
+        {% if item.is_available == 0%}
+        <a href="/quizzes/redact/{{ item.id }}/settings" class="btn btn-warning marg marg-btn">
+            Изменить
+        </a>
+        <a href="/quizzes/publish/{{ item.id }}" class="btn btn-success marg marg-btn">
+            Опубликовать
+        </a>
+        {% endif %}
+        <a href="/quizzes/delete/{{ item.id }}" class="btn btn-danger marg marg-btn">
+            Удалить
+        </a>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

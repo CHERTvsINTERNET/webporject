@@ -1,4 +1,5 @@
 import sqlalchemy
+from sqlalchemy.util.preloaded import orm
 from sqlalchemy_serializer import SerializerMixin
 
 from .db_session import SqlAlchemyBase
