@@ -7,8 +7,8 @@ from wtforms.validators import DataRequired
 
 class QuestionAdd(FlaskForm):
     question = StringField("Вопрос", validators=[DataRequired()])
-    picture = FileField("Картинка", validators=[
-                        DataRequired()])
+    picture = FileField("Картинка", validators=[FileAllowed(
+        ['jpg', 'png'], 'TOLKO KARTINKI'), DataRequired()])
     is_answer1 = BooleanField("Ответ 1")
     is_answer2 = BooleanField("Ответ 2")
     is_answer3 = BooleanField("Ответ 3")

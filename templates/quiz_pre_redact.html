@@ -2,7 +2,7 @@
 
 {% block content %}
 <div>
-	<form action="" , method="post">
+	<form action="" , method="post" enctype="multipart/form-data">
 		{{ form.hidden_tag() }}
 		<h3 class="text-center">Создание квиза</h3>
 		<br>
@@ -19,6 +19,23 @@
 			{{ form.quiz_description.label }}<br>
 			{{ form.quiz_description(class="form-control", type="text") }} <br>
 			{% for error in form.quiz_description.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		<p>
+			{{ form.quiz_theme.label }}<br>
+			{{ form.quiz_theme(class="form-control", type="text") }} <br>
+			{% for error in form.quiz_theme.errors %}
+		<p class="alert alert-danger" role="alert">
+			{{ error }}
+		</p>
+		{% endfor %}
+		</p>
+		<p>
+			{{ form.quiz_cover.label }}<br>
+			{{ form.quiz_cover(class="form-control", type="file") }} <br>
+			{% for error in form.quiz_cover.errors %}
 		<p class="alert alert-danger" role="alert">
 			{{ error }}
 		</p>

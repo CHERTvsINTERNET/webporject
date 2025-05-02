@@ -1,9 +1,12 @@
-import os
 import datetime
+import os
+from random import choice, sample, shuffle
 
 import sqlalchemy
-from flask import Flask, abort, redirect, render_template, request, send_file, url_for
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask import (Flask, abort, redirect, render_template, request, send_file,
+                   url_for)
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)
 from PIL import Image
 from sqlalchemy import desc
 from wtforms.validators import DataRequired
@@ -19,9 +22,7 @@ from data.user import User
 from forms.question import QuestionAdd, QuestionRedact
 from forms.quiz import QuizAddForm, QuizSettingsForm
 from forms.user import UserLoginForm, UserRegisterForm
-
 from objects.information_template import InfTempl
-from random import choice, shuffle, sample
 
 app = Flask(__file__)
 app.config['SECRET_KEY'] = 'mega-slohni-sekret-key-voobshe-nikto-ne-dogadaetsa'
@@ -106,16 +107,39 @@ def add_quiz():
         quiz.name = form.quiz_name.data
         quiz.description = form.quiz_description.data
         quiz.author_id = current_user.id
+        theme_name = form.quiz_theme.data
+
+        theme = db_sess.query(Theme).filter(Theme.name == theme_name).first()
+        if theme is None:
+            theme = Theme()
+            theme.name = theme_name
+            db_sess.add(theme)
+            db_sess.commit()
+
+        quiz.themes.append(theme)
         db_sess.add(quiz)
         db_sess.commit()
+        quiz_id = quiz.id
         os.makedirs(
             os.path.join(
                 app.instance_path,
-                'question_imgs', f'quiz_{quiz.id}'
+                'question_imgs', f'quiz_{quiz_id}'
             )
         )
 
-        return redirect(f"/quizzes/redact/{quiz.id}/settings")
+        f = Image.open(form.quiz_cover.data)
+        f = f.resize((256, 256))
+
+        path = os.path.join(
+            app.instance_path,
+            'question_imgs',
+            f'quiz_{quiz_id}',
+            "cover.jpg"
+        )
+
+        f.save(path)
+
+        return redirect(f"/quizzes/redact/{quiz_id}/settings")
 
     return render_template("quiz_pre_redact.html", title="Создание квиза", form=form)
 
@@ -521,16 +545,19 @@ def index():
             week1.update(title=week[0].name, theme=week[0].themes[0].name)
             week2.update(title=week[1].name, theme=week[1].themes[0].name)
         elif len(week) == 1:
-            week1.update(title=week[0].name, theme=db_sess.query(Theme).get(week[0].themeinquiz).name)
+            week1.update(title=week[0].name, theme=week[0].themes[0].name)
 
-        recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(), InfTempl(), InfTempl()
+        recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(
+        ), InfTempl(), InfTempl()
         recommendation = list()
         if current_user.is_authenticated:
-            complited = db_sess.query(association_table_passage).filter_by(users=current_user.id).all()
+            complited = db_sess.query(association_table_passage).filter_by(
+                users=current_user.id).all()
             if complited:
                 complited_quizzes = list(map(lambda x: x.quizzes, complited))
                 print(complited_quizzes, 'c')
-                all_themes = [db_sess.query(Quiz).get(id).themes[0].name for id in complited_quizzes]
+                all_themes = [db_sess.query(Quiz).get(
+                    id).themes[0].name for id in complited_quizzes]
                 for el in sorted(list(set(all_themes)), key=lambda x: all_themes.count(x), reverse=True):
                     res_list = list(
                         filter(
@@ -541,7 +568,8 @@ def index():
                     print(list(map(lambda x: x.name, res_list)))
                     if res_list:
                         result = choice(res_list)
-                        recommendation_main_theme.update(title=result.name, theme=result.themes[0].name)
+                        recommendation_main_theme.update(
+                            title=result.name, theme=result.themes[0].name)
                         print(result.name, result.themes[0].name)
                         recommendation.append(result.id)
                         break
@@ -549,14 +577,15 @@ def index():
                     res_list = list(
                         filter(
                             lambda x: x.themes[
-                                          0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
+                                0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
                             db_sess.query(Quiz).all()
                         )
                     )
                     print(list(map(lambda x: x.name, res_list)))
                     if res_list:
                         result = choice(res_list)
-                        recommendation_random_theme.update(title=result.name, theme=result.themes[0].name)
+                        recommendation_random_theme.update(
+                            title=result.name, theme=result.themes[0].name)
                         print(result.name, result.themes[0].name)
                         recommendation.append(result.id)
                         break
@@ -568,10 +597,12 @@ def index():
                 )
                 if res_list1:
                     res1 = choice(res_list1)
-                    recommendation_random.update(title=res1.name, theme=res1.themes[0].name)
+                    recommendation_random.update(
+                        title=res1.name, theme=res1.themes[0].name)
                     recommendation.append(res1.id)
 
-        print(recommendation_main_theme.title, recommendation_random_theme.title, recommendation_random.title, 'log1')
+        print(recommendation_main_theme.title,
+              recommendation_random_theme.title, recommendation_random.title, 'log1')
         print(
             recommendation_main_theme.title,
             recommendation_main_theme.theme,
@@ -605,8 +636,10 @@ def profile():
         return redirect(f"/login")
     db_sess = db_session.create_session()
 
-    qs = list(filter(lambda x: x.author.id == current_user.id, db_sess.query(Quiz)))
-    complited = list(filter(lambda x: x.users == current_user.id, db_sess.query(association_table_passage)))
+    qs = list(filter(lambda x: x.author.id ==
+              current_user.id, db_sess.query(Quiz)))
+    complited = list(filter(lambda x: x.users == current_user.id,
+                     db_sess.query(association_table_passage)))
     return render_template("profile.html", myquizzes=qs, lenqs=len(qs), lencomplited=len(complited))
 
 
@@ -615,10 +648,11 @@ def search(code):
     db_sess = db_session.create_session()
     if request.method == 'GET':
         seleceter = list(
-            filter(lambda x: code.lower() in x.name.lower(), db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
-            )
+            filter(lambda x: code.lower() in x.name.lower(),
+                   db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
+        )
         return render_template("search.html", quizzeshere=seleceter)
-    if request.method == 'POST':
+    else:
         code = request.form['code_searcher']
         if code.isdigit():
             quiz = db_sess.query(Quiz).get(code)
