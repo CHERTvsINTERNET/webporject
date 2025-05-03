@@ -456,34 +456,73 @@ def play_quiz_yes(id):
     )
 
 
-@app.route("/quizzes/calculate/<int:id>")
+@app.route("/quizzes/calculate/<int:id>", methods=["GET", "POST"])
 def calc_result(id):
+    db_sess = db_session.create_session()
+    if not current_user.is_authenticated:
+        abort(404)
+    if request.method == 'GET':
+        quiz = db_sess.query(Quiz).get(id)
+        user = db_sess.query(User).get(current_user.id)
+        if quiz in user.passages:
+            return redirect(
+                f'/quizzes/result/{id}?{"&".join(list([key + "=" + val for key, val in dict(request.args).items()]))}'
+            )
+        return render_template("calculate2.html")
+    else:
+        quiz = db_sess.query(Quiz).get(id)
+        if not quiz.is_available:
+            return abort(404)
+
+        user = db_sess.query(User).get(current_user.id)
+        if quiz not in user.passages:
+            print("новый")
+            user.passages.append(quiz)
+            db_sess.commit()
+            option = request.form['options']
+            print(option)
+            res_now = db_sess.query(Quiz).get(id)
+            if res_now is None:
+                res_now = 0
+            print(res_now)
+            count_now = len(db_sess.query(association_table_passage).filter_by(quizzes=id).all())
+            res_now.rating = (res_now.rating * count_now + int(option)) / (count_now + 1)
+            db_sess.commit()
+        else:
+            print("Уже был")
+        print(dict(request.args), 'args')
+        return redirect(
+            f'/quizzes/result/{id}?{"&".join(list([key + "=" + val for key, val in dict(request.args).items()]))}'
+        )
+
+
+@app.route('/quizzes/result/<int:id>')
+def resultgame(id):
     if not current_user.is_authenticated:
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz.is_available:
         return abort(404)
-
-    results = []
+    quistions = list()
+    your_ans = list()
+    right_ans = list()
+    res = list()
     for i, q in enumerate(db_sess.query(Question).filter(Question.quiz_id == id).all()):
+        quistions.append(q.question)
+        your_ans.append(eval(f"q.answer{request.args.get(str(i))}"))
+        right_ans.append(eval(f"q.answer{q.true_answer}"))
         ans = request.args.get(str(i))
-        print(ans)
         if ans is None:
             print(i, "is none")
             abort(404)
-
-        results.append(q.true_answer == int(ans))
-
-    user = db_sess.query(User).get(current_user.id)
-    if quiz not in user.passages:
-        print("новый")
-        user.passages.append(quiz)
-        db_sess.commit()
-    else:
-        print("Уже был")
-
-    return render_template("calc_results.html", results=results, quiz=quiz)
+        res.append(q.true_answer == int(ans))
+    color = ["green" if element else "red" for element in res]
+    res1 = [1 if element else 0 for element in res]
+    return render_template(
+        "calcres.html", name=quiz.name, items=zip(quistions, your_ans, right_ans, color, res1), count=res.count(True),
+        lenquiz=len(res), theme=quiz.themes[0].name,
+        )
 
 
 @login_manager.user_loader
@@ -521,7 +560,7 @@ def index():
             week1.update(title=week[0].name, theme=week[0].themes[0].name)
             week2.update(title=week[1].name, theme=week[1].themes[0].name)
         elif len(week) == 1:
-            week1.update(title=week[0].name, theme=db_sess.query(Theme).get(week[0].themeinquiz).name)
+            week1.update(title=week[0].name, theme=week[0].themes[0].name)
 
         recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(), InfTempl(), InfTempl()
         recommendation = list()
@@ -616,7 +655,7 @@ def search(code):
     if request.method == 'GET':
         seleceter = list(
             filter(lambda x: code.lower() in x.name.lower(), db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
-            )
+        )
         return render_template("search.html", quizzeshere=seleceter)
     if request.method == 'POST':
         code = request.form['code_searcher']

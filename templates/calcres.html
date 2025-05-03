@@ -1,0 +1,47 @@
+{% extends "base_header.html" %}
+
+{% block body %}
+<ul class="second-section">
+    <li>
+        <div class="chart"><b>Пройден</b></div>
+        <div class="pozires">
+
+            <img src="/static/quizzes/test.jpg" width="110" class="photo-sc photo1">
+            <div class="text-sc text1 nametext">
+                <b>{{ name }}</b>
+            </div>
+            <div class="theme-sc font-theme">{{ theme }}</div>
+        </div>
+    </li>
+    <li>
+        <div class="chart"><b>Результаты</b></div>
+        <div class="pozires">
+            <div class="fonr">Правильных ответов - <b>{{count}}</b></div>
+            <div class="fonr">Всего вопросов - <b>{{lenquiz}}</b></div>
+        </div>
+    </li>
+</ul>
+<table class="table table-striped table-bordered" style="font-size:24px">
+    <tr>
+        <th>Вопрос</th>
+        <th>Ваш ответ</th>
+        <th style="color:green">Правильный ответ</th>
+        <th>Баллы</th>
+    </tr>
+    {% for que, yans, rans, color, res1 in items %}
+    <tr>
+        <td>{{que}}</td>
+        <td style="color:{{color}}">{{yans}}</td>
+        <td style="color:green">{{rans}}</td>
+        <td style="width: 20px;">{{res1}}</td>
+    </tr>
+
+    {% endfor%}
+<tfoot>
+    <tr>
+      <th colspan="3">Всего :</th>
+      <td style="color: green"><b>{{count}}</b></td>
+    </tr>
+   </tfoot>
+</table>
+{% endblock %}

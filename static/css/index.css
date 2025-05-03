@@ -129,7 +129,6 @@ background: #6F47D7;
 }
 
 .first-section{
-    display: flex;
     margin-top: 0;
     margin-left: auto;
     margin-right: auto;
@@ -386,4 +385,32 @@ padding-top: 1px;
     color: black;
     font-size: 42px;
     border: 3px solid #7f7679;
+}
+
+
+.res {
+    font-size: 32px;
+}
+
+.resa {
+    margin-left: 15px;
+    margin-top: 0px;
+    margin-bottom: 10px;
+}
+
+.pozires {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 25px;
+    margin-bottom: auto;
+
+}
+
+.font-theme {
+    font-size: 15px;
+}
+
+.fonr {
+    font-size: 25px;
+    font-color: red;
 }

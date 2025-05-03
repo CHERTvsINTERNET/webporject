@@ -20,7 +20,7 @@ class Quiz(SqlAlchemyBase, SerializerMixin):
         sa.Date,
         default=datetime.now().date
     )
-    rating = sa.Column(sa.Float)
+    rating = sa.Column(sa.Float, default=0)
     reward = sa.Column(sa.Integer)  # Зачем??
     is_available = sa.Column(sa.Boolean, default=False)
 
