@@ -2,9 +2,10 @@ import os
 import datetime
 
 import sqlalchemy
-from flask import Flask, abort, redirect, render_template, request, send_file, url_for
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
-from PIL import Image
+from flask import (Flask, abort, redirect, render_template, request, send_file,
+                   url_for)
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)from PIL import Image
 from sqlalchemy import desc
 from wtforms.validators import DataRequired
 
@@ -106,16 +107,39 @@ def add_quiz():
         quiz.name = form.quiz_name.data
         quiz.description = form.quiz_description.data
         quiz.author_id = current_user.id
+        theme_name = form.quiz_theme.data
+
+        theme = db_sess.query(Theme).filter(Theme.name == theme_name).first()
+        if theme is None:
+            theme = Theme()
+            theme.name = theme_name
+            db_sess.add(theme)
+            db_sess.commit()
+
+        quiz.themes.append(theme)
         db_sess.add(quiz)
         db_sess.commit()
+        quiz_id = quiz.id
         os.makedirs(
             os.path.join(
                 app.instance_path,
-                'question_imgs', f'quiz_{quiz.id}'
+                'question_imgs', f'quiz_{quiz_id}'
             )
         )
 
-        return redirect(f"/quizzes/redact/{quiz.id}/settings")
+        f = Image.open(form.quiz_cover.data)
+        f = f.resize((256, 256))
+
+        path = os.path.join(
+            app.instance_path,
+            'question_imgs',
+            f'quiz_{quiz_id}',
+            "cover.jpg"
+        )
+
+        f.save(path)
+
+        return redirect(f"/quizzes/redact/{quiz_id}/settings")
 
     return render_template("quiz_pre_redact.html", title="Создание квиза", form=form)
 
@@ -524,7 +548,6 @@ def resultgame(id):
         lenquiz=len(res), theme=quiz.themes[0].name,
         )
 
-
 @login_manager.user_loader
 def load_user(id):
     db_sess = db_session.create_session()
@@ -560,7 +583,7 @@ def index():
             week1.update(title=week[0].name, theme=week[0].themes[0].name)
             week2.update(title=week[1].name, theme=week[1].themes[0].name)
         elif len(week) == 1:
-            week1.update(title=week[0].name, theme=week[0].themes[0].name)
+            week1.update(title=week[0].name, theme=db_sess.query(Theme).get(week[0].themeinquiz).name)
 
         recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(), InfTempl(), InfTempl()
         recommendation = list()
@@ -655,7 +678,7 @@ def search(code):
     if request.method == 'GET':
         seleceter = list(
             filter(lambda x: code.lower() in x.name.lower(), db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
-        )
+            )
         return render_template("search.html", quizzeshere=seleceter)
     if request.method == 'POST':
         code = request.form['code_searcher']

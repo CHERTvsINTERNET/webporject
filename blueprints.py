@@ -29,3 +29,18 @@ def get_image():
         return make_response(jsonify({'error': 'Not found'}), 404)
 
     return send_file(f"instance/question_imgs/quiz_{quiz_id}/question_{question_id}.jpg")
+
+
+@question_image_getter.route("/quiz_cover")
+def get_quiz_cover():
+    quiz_id = request.args["quiz_id"]
+    if quiz_id is None or not quiz_id.isnumeric():
+        return make_response(jsonify({'error': 'Bad request'}), 400)
+
+    db_sess = db_session.create_session()
+    quiz = db_sess.query(Quiz).filter(Quiz.id == quiz_id).first()
+
+    if not quiz:
+        return make_response(jsonify({'error': 'Not found'}), 404)
+
+    return send_file(f"instance/question_imgs/quiz_{quiz_id}/cover.jpg")

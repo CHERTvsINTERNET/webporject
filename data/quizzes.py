@@ -25,4 +25,5 @@ class Quiz(SqlAlchemyBase, SerializerMixin):
     is_available = sa.Column(sa.Boolean, default=False)
 
     author = orm.relationship("User", foreign_keys=[author_id])
-    themes = orm.relationship("Theme", secondary="association_theme", backref="quizzes")
+    themes = orm.relationship(
+        "Theme", secondary="association_theme", backref="quizzes")
