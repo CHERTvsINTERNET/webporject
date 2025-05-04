@@ -549,7 +549,7 @@ def resultgame(id):
     res1 = [1 if element else 0 for element in res]
     return render_template(
         "calcres.html", name=quiz.name, items=zip(quistions, your_ans, right_ans, color, res1), count=res.count(True),
-        lenquiz=len(res), theme=quiz.themes[0].name,
+        lenquiz=len(res), theme=quiz.themes[0].name, id=quiz.id
     )
 
 
