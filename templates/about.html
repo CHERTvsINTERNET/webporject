@@ -1,0 +1,29 @@
+{% extends "base_header.html" %}
+
+{% block body %}
+<center>
+	<h1>Проект QUIZZESHERE</h1>
+</center>
+<h3><a href="https://github.com/CHERTvsINTERNET/webporject"><img style="width:2em"
+			src="/static/image/githublogo.png"></a>
+	<span>{{ stars }}</span>
+	<img src="/static/image/star.png" style="width:1em">
+</h3>
+<center>
+	<h1>Создатели</h1>
+</center>
+<center>
+	<table>
+		<tbody>
+			{% for c in contrebutors %}
+			<tr>
+				<td><img src="{{ c['image'] }}" class="github_avatar"></td>
+				<td>
+					<a class='h3' href="{{ c['url'] }}">{{ c['name']}}</a>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</center>
+{% endblock %}

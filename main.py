@@ -1,15 +1,13 @@
-import os
 import datetime
+import os
+from random import choice, sample, shuffle
 
+import requests
 import sqlalchemy
-from flask import (
-    Flask, abort, redirect, render_template, request, send_file,
-    url_for
-)
-from flask_login import (
-    LoginManager, current_user, login_required,
-    login_user, logout_user
-)
+from flask import (Flask, abort, redirect, render_template, request, send_file,
+                   url_for)
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)
 from PIL import Image
 from sqlalchemy import desc
 from wtforms.validators import DataRequired
@@ -25,9 +23,7 @@ from data.user import User
 from forms.question import QuestionAdd, QuestionRedact
 from forms.quiz import QuizAddForm, QuizSettingsForm
 from forms.user import UserLoginForm, UserRegisterForm
-
 from objects.information_template import InfTempl
-from random import choice, shuffle, sample
 
 app = Flask(__file__)
 app.config['SECRET_KEY'] = 'mega-slohni-sekret-key-voobshe-nikto-ne-dogadaetsa'
@@ -103,7 +99,7 @@ def register_page():
 @app.route("/quizzes/add", methods=["GET", "POST"])
 def add_quiz():
     if not current_user.is_authenticated:
-        abort(404)
+        return redirect(f"/login")
 
     form = QuizAddForm()
     if form.validate_on_submit():
@@ -200,7 +196,7 @@ def add_question(quiz_id):
         ) < 2:
             return render_template(
                 "question_setting.html",
-                message="Должно быть как минимум два вопроса", form=form, quiz=quiz, questions=ques
+                message="Должно быть как минимум два ответа", form=form, quiz=quiz, questions=ques
             )
 
         f = Image.open(form.picture.data)
@@ -289,7 +285,7 @@ def question_redact(quiz_id, id):
             ) < 2:
                 return render_template(
                     "question_setting.html",
-                    mesage="Должно быть как минимум два вопроса", form=form, quiz=quiz,
+                    mesage="Должно быть как минимум два ответа", form=form, quiz=quiz,
                     questions=ques, pic=f'/question_images?quiz_id={quiz_id}&question_id={id}'
                 )
 
@@ -331,7 +327,7 @@ def question_redact(quiz_id, id):
             return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
 
         return render_template(
-            "question_setting.html", mesage="Должно быть как минимум два вопроса",
+            "question_setting.html", mesage="Должно быть как минимум два ответа",
             form=form, quiz=quiz, questions=ques,
             pic=f'/question_images?quiz_id={quiz_id}&question_id={id}'
         )
@@ -513,8 +509,10 @@ def calc_result(id):
             if res_now is None:
                 res_now = 0
             print(res_now)
-            count_now = len(db_sess.query(association_table_passage).filter_by(quizzes=id).all())
-            res_now.rating = (res_now.rating * count_now + int(option)) / (count_now + 1)
+            count_now = len(db_sess.query(
+                association_table_passage).filter_by(quizzes=id).all())
+            res_now.rating = (res_now.rating * count_now +
+                              int(option)) / (count_now + 1)
             user.passages.append(quiz)
             db_sess.commit()
             db_sess.commit()
@@ -579,8 +577,10 @@ def index():
             datetime.datetime.today().date() - datetime.timedelta(days=7)
         ).order_by(desc(Quiz.rating)).all()
         qpassage = db_sess.query(association_table_passage)
-        monce = list(filter(lambda x: len(qpassage.filter_by(quizzes=x.id).all()) >= 2, monce))
-        week = list(filter(lambda x: len(qpassage.filter_by(quizzes=x.id).all()) >= 2, week))
+        monce = list(filter(lambda x: len(
+            qpassage.filter_by(quizzes=x.id).all()) >= 2, monce))
+        week = list(filter(lambda x: len(
+            qpassage.filter_by(quizzes=x.id).all()) >= 2, week))
 
         monce1, monce2 = InfTempl(), InfTempl()
         week1, week2 = InfTempl(), InfTempl()
@@ -608,14 +608,17 @@ def index():
                 title=week[0].name, theme=week[0].themes[0].name, rating=round(week[0].rating, 1), id=week[0].id
             )
 
-        recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(), InfTempl(), InfTempl()
+        recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(
+        ), InfTempl(), InfTempl()
         recommendation = list()
         if current_user.is_authenticated:
-            complited = db_sess.query(association_table_passage).filter_by(users=current_user.id).all()
+            complited = db_sess.query(association_table_passage).filter_by(
+                users=current_user.id).all()
             if complited:
                 complited_quizzes = list(map(lambda x: x.quizzes, complited))
                 print(complited_quizzes, 'c')
-                all_themes = [db_sess.query(Quiz).get(id).themes[0].name for id in complited_quizzes]
+                all_themes = [db_sess.query(Quiz).get(
+                    id).themes[0].name for id in complited_quizzes]
                 for el in sorted(list(set(all_themes)), key=lambda x: all_themes.count(x), reverse=True):
                     res_list = list(
                         filter(
@@ -636,14 +639,15 @@ def index():
                     res_list = list(
                         filter(
                             lambda x: x.themes[
-                                          0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
+                                0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
                             db_sess.query(Quiz).all()
                         )
                     )
                     print(list(map(lambda x: x.name, res_list)))
                     if res_list:
                         result = choice(res_list)
-                        recommendation_random_theme.update(title=result.name, theme=result.themes[0].name)
+                        recommendation_random_theme.update(
+                            title=result.name, theme=result.themes[0].name)
                         print(result.name, result.themes[0].name)
                         recommendation.append(result.id)
                         break
@@ -655,10 +659,12 @@ def index():
                 )
                 if res_list1:
                     res1 = choice(res_list1)
-                    recommendation_random.update(title=res1.name, theme=res1.themes[0].name)
+                    recommendation_random.update(
+                        title=res1.name, theme=res1.themes[0].name)
                     recommendation.append(res1.id)
 
-        print(recommendation_main_theme.title, recommendation_random_theme.title, recommendation_random.title, 'log1')
+        print(recommendation_main_theme.title,
+              recommendation_random_theme.title, recommendation_random.title, 'log1')
         print(
             recommendation_main_theme.title,
             recommendation_main_theme.theme,
@@ -695,8 +701,10 @@ def profile():
         return redirect(f"/login")
     db_sess = db_session.create_session()
 
-    qs = list(filter(lambda x: x.author.id == current_user.id, db_sess.query(Quiz)))
-    complited = list(filter(lambda x: x.users == current_user.id, db_sess.query(association_table_passage)))
+    qs = list(filter(lambda x: x.author.id ==
+              current_user.id, db_sess.query(Quiz)))
+    complited = list(filter(lambda x: x.users == current_user.id,
+                     db_sess.query(association_table_passage)))
     return render_template("profile.html", myquizzes=qs, lenqs=len(qs), lencomplited=len(complited))
 
 
@@ -705,10 +713,11 @@ def search(code):
     db_sess = db_session.create_session()
     if request.method == 'GET':
         seleceter = list(
-            filter(lambda x: code.lower() in x.name.lower(), db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
+            filter(lambda x: code.lower() in x.name.lower(),
+                   db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
         )
         return render_template("search.html", quizzeshere=seleceter)
-    if request.method == 'POST':
+    else:
         code = request.form['code_searcher']
         if code.isdigit():
             quiz = db_sess.query(Quiz).get(code)
@@ -717,6 +726,24 @@ def search(code):
             return redirect(f'/quizzes/play/{code}')
         else:
             return redirect(f'/search/{code}')
+
+
+@app.route("/about")
+def about():
+    r = requests.get("https://api.github.com/repos/CHERTvsINTERNET/webporject")
+    if not r:
+        stars = "??"
+    else:
+        stars = r.json()["stargazers_count"]
+    r = requests.get(
+        "https://api.github.com/repos/CHERTvsINTERNET/webporject/contributors")
+    if not r:
+        contrebutors = []
+    contrebutors = []
+    for c in r.json():
+        contrebutors.append(
+            {'image': c["avatar_url"], "name": c['login'], 'url': c["html_url"]})
+    return render_template("about.html", contrebutors=contrebutors, stars=stars)
 
 
 @app.route('/logout')

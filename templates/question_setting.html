@@ -17,7 +17,7 @@
 		</p>
 		<p>
 			{% if pic %}
-			<img src="{{pic}}">
+			<img src="{{pic}}" class="quistion-img"><br>
 			{% endif %}
 			{{ form.picture.label }}<br>
 			{{ form.picture(class="form-control", type="file") }} <br>
@@ -93,10 +93,12 @@
 		{% endfor %}
 		</p>
 
-		<h3>Правильный ответ?></h3>
+		<h3>Правильный ответ?</h3>
 		<p>
+			{% set i = 1 %}
 			{% for sub in form.true_answer %}
-			{{ sub }} {{ sub.label }} <br>
+			{{ sub(class="rad") }} {{ sub.label }} <br>
+			{% set i = i + 1 %}
 			{%endfor%}
 		</p>
 

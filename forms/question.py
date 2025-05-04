@@ -20,7 +20,7 @@ class QuestionAdd(FlaskForm):
     answer4_text = StringField()
 
     true_answer = RadioField(
-        "", choices=[(1, "Ответ?"), (2, "Ответ?"), (3, "Ответ?"), (4, "Ответ?")])
+        "", choices=[(1, "Ответ 1"), (2, "Ответ 2"), (3, "Ответ 3"), (4, "Ответ 4")])
 
     submit = SubmitField("Применить")
 
