@@ -17,36 +17,39 @@
         </div>
     </li>
 </ul>
-        <div class="container">
+<div class="first-section" style="display: flex;" onclick="location.href='/quizzes/play/{{rec_id}}'">
+         <img src="/quiz_cover?quiz_id={{rec_id}}" width="195" class="photo photo-fsc">
+         <div class="text-fs" style="color: white; margin-left: 15px; margin-top:50px;">
+             <b>{{ rec_name }}</b>
+         </div>
+         <div class="theme-fs"><b>{{ rec_theme }}</b></div>
+ </div>
 
-
-</div>
 <ul class="second-section">
     <li>
         <div class="chart"><b>Топ месяца</b></div>
-        <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo1">
-        <div class="text-sc text1 nametext">
-            <b>{{ monce_name1 }}</b>
+        <img src="/quiz_cover?quiz_id={{monce_id1}}" width="110" class="photo-sc photo1">
+        <div class="text-sc text1 nametext" onclick="location.href='/quizzes/play/{{ monce_id1 }}'">
+            <b>{{ monce_name1 }} | {{ monce_rating1 }}</b>
         </div>
         <div class="theme-sc font-theme">{{ monce_theme1 }}</div>
-
-        <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo2">
-        <div class="text-sc text2 nametext">
-            <b>{{ monce_name2 }}</b>
+        <img src="/quiz_cover?quiz_id={{monce_id2}}" width="110" class="photo-sc photo2">
+        <div class="text-sc text2 nametext" onclick="location.href='/quizzes/play/{{ monce_id2 }}'">
+            <b>{{ monce_name2 }} | {{ monce_rating2 }}</b>
         </div>
         <div class="theme-sc theme1 font-theme">{{ monce_theme2 }}</div>
     </li>
     <li>
         <div class="chart"><b>Топ недели</b></div>
-        <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo1">
-        <div class="text-sc text1 nametext">
-            <b>{{ week_name1 }}</b>
+        <img src="/quiz_cover?quiz_id={{week_id1}}" width="110" class="photo-sc photo1">
+        <div class="text-sc text1 nametext" onclick="location.href='/quizzes/play/{{ week_id1 }}'">
+            <b>{{ week_name1 }} | {{ week_rating1 }}</b>
         </div>
         <div class="theme-sc font-theme">{{ week_theme1 }}</div>
 
-        <img src="../static/quizzes/test.jpg" width="110" class="photo-sc photo2">
-        <div class="text-sc text2 nametext">
-            <b>{{ week_name2 }}</b>
+        <img src="/quiz_cover?quiz_id={{week_id2}}" width="110" class="photo-sc photo2">
+        <div class="text-sc text2 nametext" onclick="location.href='/quizzes/play/{{ week_id2 }}'">
+            <b>{{ week_name2 }} | {{ week_rating2 }}</b>
         </div>
         <div class="theme-sc theme1 font-theme">{{ monce_theme2 }}</div>
     </li>

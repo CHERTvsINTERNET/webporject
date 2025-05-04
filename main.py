@@ -2,10 +2,15 @@ import os
 import datetime
 
 import sqlalchemy
-from flask import (Flask, abort, redirect, render_template, request, send_file,
-                   url_for)
-from flask_login import (LoginManager, current_user, login_required,
-                         login_user, logout_user)from PIL import Image
+from flask import (
+    Flask, abort, redirect, render_template, request, send_file,
+    url_for
+)
+from flask_login import (
+    LoginManager, current_user, login_required,
+    login_user, logout_user
+)
+from PIL import Image
 from sqlalchemy import desc
 from wtforms.validators import DataRequired
 
@@ -501,8 +506,7 @@ def calc_result(id):
         user = db_sess.query(User).get(current_user.id)
         if quiz not in user.passages:
             print("новый")
-            user.passages.append(quiz)
-            db_sess.commit()
+
             option = request.form['options']
             print(option)
             res_now = db_sess.query(Quiz).get(id)
@@ -511,6 +515,8 @@ def calc_result(id):
             print(res_now)
             count_now = len(db_sess.query(association_table_passage).filter_by(quizzes=id).all())
             res_now.rating = (res_now.rating * count_now + int(option)) / (count_now + 1)
+            user.passages.append(quiz)
+            db_sess.commit()
             db_sess.commit()
         else:
             print("Уже был")
@@ -546,7 +552,8 @@ def resultgame(id):
     return render_template(
         "calcres.html", name=quiz.name, items=zip(quistions, your_ans, right_ans, color, res1), count=res.count(True),
         lenquiz=len(res), theme=quiz.themes[0].name,
-        )
+    )
+
 
 @login_manager.user_loader
 def load_user(id):
@@ -571,19 +578,35 @@ def index():
             Quiz.created_date >=
             datetime.datetime.today().date() - datetime.timedelta(days=7)
         ).order_by(desc(Quiz.rating)).all()
+        qpassage = db_sess.query(association_table_passage)
+        monce = list(filter(lambda x: len(qpassage.filter_by(quizzes=x.id).all()) >= 2, monce))
+        week = list(filter(lambda x: len(qpassage.filter_by(quizzes=x.id).all()) >= 2, week))
+
         monce1, monce2 = InfTempl(), InfTempl()
         week1, week2 = InfTempl(), InfTempl()
 
         if len(monce) >= 2:
-            monce1.update(title=monce[0].name, theme=monce[0].themes[0].name)
-            monce2.update(title=monce[1].name, theme=monce[1].themes[0].name)
+            monce1.update(
+                title=monce[0].name, theme=monce[0].themes[0].name, rating=round(monce[0].rating, 1), id=monce[0].id
+            )
+            monce2.update(
+                title=monce[1].name, theme=monce[1].themes[0].name, rating=round(monce[1].rating, 1), id=monce[1].id
+            )
         elif len(monce) == 1:
-            monce1.update(title=monce[0].name, theme=monce[0].themes[0].name)
+            monce1.update(
+                title=monce[0].name, theme=monce[0].themes[0].name, rating=round(monce[0].rating, 1), id=monce[0].id
+            )
         if len(week) >= 2:
-            week1.update(title=week[0].name, theme=week[0].themes[0].name)
-            week2.update(title=week[1].name, theme=week[1].themes[0].name)
+            week1.update(
+                title=week[0].name, theme=week[0].themes[0].name, rating=round(week[0].rating, 1), id=week[0].id
+            )
+            week2.update(
+                title=week[1].name, theme=week[1].themes[0].name, rating=round(week[1].rating, 1), id=week[1].id
+            )
         elif len(week) == 1:
-            week1.update(title=week[0].name, theme=db_sess.query(Theme).get(week[0].themeinquiz).name)
+            week1.update(
+                title=week[0].name, theme=week[0].themes[0].name, rating=round(week[0].rating, 1), id=week[0].id
+            )
 
         recommendation_main_theme, recommendation_random_theme, recommendation_random = InfTempl(), InfTempl(), InfTempl()
         recommendation = list()
@@ -603,7 +626,9 @@ def index():
                     print(list(map(lambda x: x.name, res_list)))
                     if res_list:
                         result = choice(res_list)
-                        recommendation_main_theme.update(title=result.name, theme=result.themes[0].name)
+                        recommendation_main_theme.update(
+                            title=result.name, theme=result.themes[0].name, rating=round(result.rating, 1), id=result.id
+                        )
                         print(result.name, result.themes[0].name)
                         recommendation.append(result.id)
                         break
@@ -646,8 +671,11 @@ def index():
         return render_template(
             "index.html", monce_name1=monce1.title, monce_name2=monce2.title, week_name1=week1.title,
             week_name2=week2.title, monce_theme1=monce1.theme, monce_theme2=monce2.theme, week_theme1=week1.theme,
-            week_theme2=week2.theme, name_start=recommendation_main_theme.title,
-            theme_start=recommendation_main_theme.theme, recomendation=rec_list
+            week_theme2=week2.theme, rec_name=recommendation_main_theme.title,
+            rec_theme=recommendation_main_theme.theme,
+            monce_rating1=monce1.rating, monce_rating2=monce2.rating, week_rating1=week1.rating,
+            week_rating2=week2.rating, monce_id1=monce1.id, monce_id2=monce2.id, week_id1=week1.id, week_id2=week2.id,
+            rec_id=recommendation_main_theme.id
 
         )
     if request.method == 'POST':
@@ -678,7 +706,7 @@ def search(code):
     if request.method == 'GET':
         seleceter = list(
             filter(lambda x: code.lower() in x.name.lower(), db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
-            )
+        )
         return render_template("search.html", quizzeshere=seleceter)
     if request.method == 'POST':
         code = request.form['code_searcher']

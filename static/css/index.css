@@ -253,11 +253,13 @@ p {
     background: #30d5c8;
     border-radius: 15px;
     height: 5px;
-    margin-left: 560px;
+    margin-left: 150px;
+    margin-right: 25px;
     margin-top: 230px;
     font-size: 17px;
     padding-top: 10px;
-    padding-left: 45px;
+    text-align: center;
+
 }
 
 .chart {
@@ -414,3 +416,10 @@ padding-top: 1px;
     font-size: 25px;
     font-color: red;
 }
+
+.photo-fsc {
+     margin-top: 65px;
+     margin-bottom: 65px;
+     margin-left: 150px;
+     border-radius: 15px;
+ }
