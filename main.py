@@ -4,10 +4,14 @@ from random import choice, sample, shuffle
 
 import requests
 import sqlalchemy
-from flask import (Flask, abort, redirect, render_template, request, send_file,
-                   url_for)
-from flask_login import (LoginManager, current_user, login_required,
-                         login_user, logout_user)
+from flask import (
+    Flask, abort, redirect, render_template, request, send_file,
+    url_for
+)
+from flask_login import (
+    LoginManager, current_user, login_required,
+    login_user, logout_user
+)
 from PIL import Image
 from sqlalchemy import desc
 from wtforms.validators import DataRequired
@@ -24,6 +28,13 @@ from forms.question import QuestionAdd, QuestionRedact
 from forms.quiz import QuizAddForm, QuizSettingsForm
 from forms.user import UserLoginForm, UserRegisterForm
 from objects.information_template import InfTempl
+
+import logging
+
+logging.basicConfig(
+    filename='information.log',
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
 
 app = Flask(__file__)
 app.config['SECRET_KEY'] = 'mega-slohni-sekret-key-voobshe-nikto-ne-dogadaetsa'
@@ -44,6 +55,7 @@ def main():
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
     if current_user.is_authenticated:
+        logging.warning("Пользователь уже зарегистрирован")
         abort(404)
 
     form = UserLoginForm()
@@ -67,6 +79,7 @@ def login_page():
 @app.route("/register", methods=["GET", "POST"])
 def register_page():
     if current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
 
     form = UserRegisterForm()
@@ -148,10 +161,12 @@ def add_quiz():
 @app.route("/quizzes/redact/<int:id>/settings", methods=["GET", "POST"])
 def redact_quiz_settings(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         abort(404)
     if quiz.is_available:
         return redirect(f"/quizzes/published/{id}")
@@ -175,10 +190,13 @@ def redact_quiz_settings(id):
 @app.route("/quizzes/redact/<int:quiz_id>/questions/add", methods=["GET", "POST"])
 def add_question(quiz_id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(quiz_id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
+
         abort(404)
     if quiz.is_available:
         return redirect(f"/quizzes/published/{id}")
@@ -238,10 +256,12 @@ def add_question(quiz_id):
 )
 def question_redact(quiz_id, id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(quiz_id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         abort(404)
 
     if quiz.is_available:
@@ -309,6 +329,7 @@ def question_redact(quiz_id, id):
 
             question.quiz_id = quiz_id
             question.true_answer = form.true_answer.data
+            logging.debug("Добавление элемента в бд")
             db_sess.commit()
 
             if form.picture.validate(
@@ -323,6 +344,7 @@ def question_redact(quiz_id, id):
                     f"question_{question.id}.jpg"
                 )
                 f.save(path)
+            logging.debug("Добавление элемента в бд")
             db_sess.commit()
             return redirect(f"/quizzes/redact/{quiz_id}/questions/{question.id}")
 
@@ -336,10 +358,12 @@ def question_redact(quiz_id, id):
 @app.route("/quizzes/delete/<int:id>")
 def delete_quiz(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         abort(404)
     if quiz.is_available == 0:
         href_reject = f"/quizzes/redact/{id}/settings"
@@ -353,6 +377,7 @@ def delete_quiz(id):
 @app.route("/quizzes/delete/<int:id>/yes")
 def delete_quiz_yes(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
@@ -360,6 +385,7 @@ def delete_quiz_yes(id):
         abort(404)
 
     for q in db_sess.query(Question).filter(Question.quiz_id == id):
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         db_sess.delete(q)
 
     for root, dirs, files in os.walk(os.path.join("instance", "question_imgs", f"quiz_{id}"), topdown=False):
@@ -368,20 +394,22 @@ def delete_quiz_yes(id):
         for name in dirs:
             os.rmdir(os.path.join(root, name))
     os.rmdir(os.path.join("instance", "question_imgs", f"quiz_{id}"))
-
+    logging.debug("Удаление квиза {}".format(quiz.name))
     db_sess.delete(quiz)
     db_sess.commit()
-
+    logging.debug("Удаление прошло")
     return redirect("/")
 
 
 @app.route("/quizzes/publish/<int:id>")
 def pub_quiz(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         abort(404)
 
     if quiz.is_available:
@@ -396,10 +424,12 @@ def pub_quiz(id):
 @app.route("/quizzes/publish/<int:id>/yes")
 def pub_quiz_yes(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         abort(404)
 
     if quiz.is_available:
@@ -414,10 +444,12 @@ def pub_quiz_yes(id):
 @app.route("/quizzes/published/<int:id>")
 def published_dashboard(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz or quiz.author_id != current_user.id:
+        logging.warning("Пользователь {} не имеет прав на квиз {}".format(quiz.author_id, current_user.id))
         abort(404)
     if not quiz.is_available:
         return redirect(f"/quizzes/redact/{id}/settings")
@@ -428,10 +460,12 @@ def published_dashboard(id):
 @app.route("/quizzes/play/<int:id>")
 def play_quiz(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz.is_available:
+        logging.warning("Квиз не опубликован")
         return abort(404)
 
     redirect = request.args.get("redirect", None)
@@ -447,10 +481,12 @@ def play_quiz(id):
 @app.route("/quizzes/play/<int:id>/yes")
 def play_quiz_yes(id):
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         abort(404)
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz.is_available:
+        logging.warning("Квиз не опубликован")
         return abort(404)
 
     qs = db_sess.query(Question).filter(Question.quiz_id == id)
@@ -497,11 +533,12 @@ def calc_result(id):
     else:
         quiz = db_sess.query(Quiz).get(id)
         if not quiz.is_available:
+            logging.warning("Квиз не опубликован")
             return abort(404)
 
         user = db_sess.query(User).get(current_user.id)
         if quiz not in user.passages:
-            print("новый")
+            logging.debug("новое прохождение квиза {} пользователем {}".format(quiz.name, user.name))
 
             option = request.form['options']
             print(option)
@@ -509,15 +546,18 @@ def calc_result(id):
             if res_now is None:
                 res_now = 0
             print(res_now)
-            count_now = len(db_sess.query(
-                association_table_passage).filter_by(quizzes=id).all())
+            count_now = len(
+                db_sess.query(
+                    association_table_passage
+                ).filter_by(quizzes=id).all()
+                )
             res_now.rating = (res_now.rating * count_now +
                               int(option)) / (count_now + 1)
             user.passages.append(quiz)
             db_sess.commit()
-            db_sess.commit()
+            logging.debug("Новое сохранение бд")
         else:
-            print("Уже был")
+            logging.info("прохождение квиза {} пользователем {} уже совершалось".format(quiz.name, user.name))
         print(dict(request.args), 'args')
         return redirect(
             f'/quizzes/result/{id}?{"&".join(list([key + "=" + val for key, val in dict(request.args).items()]))}'
@@ -531,6 +571,7 @@ def resultgame(id):
     db_sess = db_session.create_session()
     quiz = db_sess.query(Quiz).get(id)
     if not quiz.is_available:
+        logging.warning("Квиз не опубликован")
         return abort(404)
     quistions = list()
     your_ans = list()
@@ -542,7 +583,7 @@ def resultgame(id):
         right_ans.append(eval(f"q.answer{q.true_answer}"))
         ans = request.args.get(str(i))
         if ans is None:
-            print(i, "is none")
+            logging.warning("{} is none".format(i))
             abort(404)
         res.append(q.true_answer == int(ans))
     color = ["green" if element else "red" for element in res]
@@ -565,7 +606,6 @@ def load_user(id):
 def index():
     db_sess = db_session.create_session()
     if request.method == 'GET':
-        print()
         monce = db_sess.query(Quiz).filter(
             Quiz.created_date.between(
                 datetime.datetime.today().date() - datetime.timedelta(days=30),
@@ -577,10 +617,20 @@ def index():
             datetime.datetime.today().date() - datetime.timedelta(days=7)
         ).order_by(desc(Quiz.rating)).all()
         qpassage = db_sess.query(association_table_passage)
-        monce = list(filter(lambda x: len(
-            qpassage.filter_by(quizzes=x.id).all()) >= 2, monce))
-        week = list(filter(lambda x: len(
-            qpassage.filter_by(quizzes=x.id).all()) >= 2, week))
+        monce = list(
+            filter(
+                lambda x: len(
+                    qpassage.filter_by(quizzes=x.id).all()
+                ) >= 2, monce
+                )
+            )
+        week = list(
+            filter(
+                lambda x: len(
+                    qpassage.filter_by(quizzes=x.id).all()
+                ) >= 2, week
+                )
+            )
 
         monce1, monce2 = InfTempl(), InfTempl()
         week1, week2 = InfTempl(), InfTempl()
@@ -613,12 +663,13 @@ def index():
         recommendation = list()
         if current_user.is_authenticated:
             complited = db_sess.query(association_table_passage).filter_by(
-                users=current_user.id).all()
+                users=current_user.id
+            )
             if complited:
                 complited_quizzes = list(map(lambda x: x.quizzes, complited))
-                print(complited_quizzes, 'c')
                 all_themes = [db_sess.query(Quiz).get(
-                    id).themes[0].name for id in complited_quizzes]
+                    id
+                ).themes[0].name for id in complited_quizzes]
                 for el in sorted(list(set(all_themes)), key=lambda x: all_themes.count(x), reverse=True):
                     res_list = list(
                         filter(
@@ -626,29 +677,26 @@ def index():
                             db_sess.query(Quiz).all()
                         )
                     )
-                    print(list(map(lambda x: x.name, res_list)))
                     if res_list:
                         result = choice(res_list)
                         recommendation_main_theme.update(
                             title=result.name, theme=result.themes[0].name, rating=round(result.rating, 1), id=result.id
                         )
-                        print(result.name, result.themes[0].name)
                         recommendation.append(result.id)
                         break
                 for el in sample(all_themes, len(all_themes)):
                     res_list = list(
                         filter(
                             lambda x: x.themes[
-                                0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
+                                          0].name == el and x.id not in complited_quizzes and x.id not in recommendation,
                             db_sess.query(Quiz).all()
                         )
                     )
-                    print(list(map(lambda x: x.name, res_list)))
                     if res_list:
                         result = choice(res_list)
                         recommendation_random_theme.update(
-                            title=result.name, theme=result.themes[0].name)
-                        print(result.name, result.themes[0].name)
+                            title=result.name, theme=result.themes[0].name
+                        )
                         recommendation.append(result.id)
                         break
                 res_list1 = list(
@@ -660,18 +708,26 @@ def index():
                 if res_list1:
                     res1 = choice(res_list1)
                     recommendation_random.update(
-                        title=res1.name, theme=res1.themes[0].name)
+                        title=res1.name, theme=res1.themes[0].name
+                    )
                     recommendation.append(res1.id)
-
-        print(recommendation_main_theme.title,
-              recommendation_random_theme.title, recommendation_random.title, 'log1')
-        print(
-            recommendation_main_theme.title,
-            recommendation_main_theme.theme,
-            [recommendation_random_theme.title, recommendation_random.title],
-            [recommendation_random_theme.theme, recommendation_random.theme]
+        else:
+            logging.warning("Пользователь не зарегистрирован")
+        logging.info(
+            '{} {}'.format(
+                recommendation_main_theme.title,
+                recommendation_random_theme.title, recommendation_random.title
+                )
+            )
+        logging.info(
+            '{} {} {} {}'.format(
+                recommendation_main_theme.title,
+                recommendation_main_theme.theme,
+                [recommendation_random_theme.title, recommendation_random.title],
+                [recommendation_random_theme.theme, recommendation_random.theme]
+            )
         )
-        print(monce1.title, monce2.title, week1.title, week2.title)
+        logging.info('{} {} {} {}'.format(monce1.title, monce2.title, week1.title, week2.title))
         rec_list = [(recommendation_random_theme.title, recommendation_random_theme.theme),
                     (recommendation_random.title, recommendation_random.theme)]
         return render_template(
@@ -698,13 +754,22 @@ def index():
 @app.route("/profile")
 def profile():
     if not current_user.is_authenticated:
+        logging.warning("Пользователь не зарегистрирован")
         return redirect(f"/login")
     db_sess = db_session.create_session()
 
-    qs = list(filter(lambda x: x.author.id ==
-              current_user.id, db_sess.query(Quiz)))
-    complited = list(filter(lambda x: x.users == current_user.id,
-                     db_sess.query(association_table_passage)))
+    qs = list(
+        filter(
+            lambda x: x.author.id ==
+                      current_user.id, db_sess.query(Quiz)
+            )
+        )
+    complited = list(
+        filter(
+            lambda x: x.users == current_user.id,
+            db_sess.query(association_table_passage)
+            )
+        )
     return render_template("profile.html", myquizzes=qs, lenqs=len(qs), lencomplited=len(complited))
 
 
@@ -713,8 +778,10 @@ def search(code):
     db_sess = db_session.create_session()
     if request.method == 'GET':
         seleceter = list(
-            filter(lambda x: code.lower() in x.name.lower(),
-                   db_sess.query(Quiz).filter(Quiz.is_available == 1).all())
+            filter(
+                lambda x: code.lower() in x.name.lower(),
+                db_sess.query(Quiz).filter(Quiz.is_available == 1).all()
+                )
         )
         return render_template("search.html", quizzeshere=seleceter)
     else:
@@ -730,19 +797,25 @@ def search(code):
 
 @app.route("/about")
 def about():
-    r = requests.get("https://api.github.com/repos/CHERTvsINTERNET/webproject")
+    r = requests.get("https://api.github.com/repos/CHERTvsINTERNET/webporject")
     if not r:
         stars = "??"
     else:
         stars = r.json()["stargazers_count"]
     r = requests.get(
-        "https://api.github.com/repos/CHERTvsINTERNET/webproject/contributors")
+        "https://api.github.com/repos/CHERTvsINTERNET/webporject/contributors"
+    )
     if not r:
         contrebutors = []
     contrebutors = []
     for c in r.json():
         contrebutors.append(
-            {'image': c["avatar_url"], "name": c['login'], 'url': c["html_url"]})
+            {
+                'image': c["avatar_url"],
+                "name": c['login'],
+                'url': c["html_url"]
+            }
+        )
     return render_template("about.html", contrebutors=contrebutors, stars=stars)
 
 
@@ -754,5 +827,6 @@ def logout():
 
 
 if __name__ == "__main__":
+    logging.info("Начало выполнения")
     main()
     app.run(host="127.0.0.1", port=8080)
