@@ -730,13 +730,13 @@ def search(code):
 
 @app.route("/about")
 def about():
-    r = requests.get("https://api.github.com/repos/CHERTvsINTERNET/webporject")
+    r = requests.get("https://api.github.com/repos/CHERTvsINTERNET/webproject")
     if not r:
         stars = "??"
     else:
         stars = r.json()["stargazers_count"]
     r = requests.get(
-        "https://api.github.com/repos/CHERTvsINTERNET/webporject/contributors")
+        "https://api.github.com/repos/CHERTvsINTERNET/webproject/contributors")
     if not r:
         contrebutors = []
     contrebutors = []
