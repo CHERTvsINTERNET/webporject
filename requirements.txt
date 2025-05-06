@@ -14,11 +14,10 @@ MarkupSafe
 pillow
 psycopg2-binary
 pytz
-urllib3==2.0.7
-requests==2.31.0
+urllib3
+requests
 SQLAlchemy
 sqlalchemy-serializer
 typing_extensions
-urllib3
 Werkzeug
 WTForms
