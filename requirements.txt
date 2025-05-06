@@ -14,7 +14,7 @@ MarkupSafe
 pillow
 psycopg2-binary
 pytz
-urllib3==2.2.3
+urllib3==2.0.7
 requests==2.32.3
 SQLAlchemy
 sqlalchemy-serializer
