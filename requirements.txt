@@ -15,7 +15,7 @@ pillow
 psycopg2-binary
 pytz
 urllib3==2.0.7
-requests==2.32.3
+requests==2.31.0
 SQLAlchemy
 sqlalchemy-serializer
 typing_extensions
