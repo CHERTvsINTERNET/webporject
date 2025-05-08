@@ -31,10 +31,10 @@ from objects.information_template import InfTempl
 
 import logging
 
-logging.basicConfig(
+'''logging.basicConfig(
     filename='information.log',
     format='%(asctime)s %(levelname)s %(name)s %(message)s'
-)
+)'''
 
 app = Flask(__file__)
 app.config['SECRET_KEY'] = 'mega-slohni-sekret-key-voobshe-nikto-ne-dogadaetsa'
@@ -199,7 +199,7 @@ def add_question(quiz_id):
 
         abort(404)
     if quiz.is_available:
-        return redirect(f"/quizzes/published/{id}")
+        return redirect(f"/quizzes/published/{quiz_id}")
 
     ques = db_sess.query(Question).filter(Question.quiz_id == quiz_id)
     form = QuestionAdd()
@@ -824,6 +824,8 @@ def about():
 def logout():
     logout_user()
     return redirect("/")
+
+
 
 
 if __name__ == "__main__":
