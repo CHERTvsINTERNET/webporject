@@ -21,6 +21,7 @@ QUIZZESHERE - *Эдьютейнмен* (образовательно-развл�
 [![Python](https://img.shields.io/badge/Python-3.9-gold?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-red?style=for-the-badge&logo=SQLAlchemy&logoColor=white)](https://www.sqlalchemy.org/)
 [![Flask](https://img.shields.io/badge/Flask-blue?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/en/stable/)
+[![Bootsrtap](https://img.shields.io/badge/Bootstrap-blue?style=for-the-badge&logo=bootstrap&logoColor=white)](https://flask.palletsprojects.com/en/stable/)
 
 
 
