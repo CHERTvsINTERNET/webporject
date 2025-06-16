@@ -18,7 +18,7 @@
 ## Основная информация
 
 QUIZZESHERE - *Эдьютейнмен* (образовательно-развлекательный) сервис квизов (викторин).   
-http://45.67.56.25/ - Хостинг на vps сервере.   
+none - Хостинг на vps сервере.   
 [![Python](https://img.shields.io/badge/Python-3.9-gold?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-red?style=for-the-badge&logo=SQLAlchemy&logoColor=white)](https://www.sqlalchemy.org/)
 [![Flask](https://img.shields.io/badge/Flask-blue?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/en/stable/)
